@@ -1,6 +1,6 @@
 name: mooc-images
 version: 0.9
-cabal-version: >=1.22
+cabal-version: 1.22
 build-type: Simple
 license: MIT
 license-file: LICENSE
@@ -14,103 +14,77 @@ description:
     A small web service based on yesod.
     Developed to support edX courses provided by the Chair iA at ETH Zurich.
     Provides two pages:
-      1) share - a post-form to be embedded into edX for uploading images;
-      2) / - view images uploaded by students.
+    1) share - a post-form to be embedded into edX for uploading images;
+    2) / - view images uploaded by students.
 category: Web
 author: Artem Chirkin
 
 executable mooc-images
     main-is: Main.hs
     build-depends:
-        base -any,
-        time -any,
-        filepath -any,
-        directory -any,
-        text -any,
-        bytestring -any,
-        yesod -any,
-        conduit -any,
-        persistent -any,
-        yesod-static -any,
-        persistent-sqlite -any,
-        yesod-form -any,
-        data-default -any,
-        stm -any,
-        conduit-extra -any,
-        resourcet -any,
-        blaze-markup -any,
-        shakespeare -any,
-        containers -any,
-        monad-logger -any,
-        http-conduit -any,
-        cryptohash -any,
+        aeson -any,
+        base >=4.8,
         base64-bytestring -any,
         blaze-builder -any,
-        transformers -any,
-        crypto-pubkey-types -any,
-        SHA -any,
-        http-client -any,
-        http-types -any,
-        random -any,
-        RSA -any,
-        authenticate-oauth -any,
-        xml-conduit -any,
-        xml-hamlet -any,
-        wai -any,
-        ltiv1p1 -any,
-        yesod-core -any,
-        aeson -any,
-        persistent-postgresql -any,
+        blaze-markup -any,
+        bytestring -any,
+        case-insensitive -any,
+        conduit -any,
+        conduit-extra -any,
+        containers -any,
+        data-default -any,
         gd -any,
-        case-insensitive -any
+        http-conduit -any,
+        ltiv1p1 -any,
+        monad-logger -any,
+        persistent -any,
+        persistent-postgresql -any,
+        persistent-sqlite -any,
+        resourcet -any,
+        shakespeare -any,
+        text -any,
+        time -any,
+        transformers -any,
+        wai -any,
+        yesod -any,
+        yesod-core -any,
+        yesod-static -any
     default-language: Haskell2010
     hs-source-dirs: src
     other-modules:
-        Config
-        Dispatch
         Foundation
+        Dispatch
+        Model
+        Config
+        Handler.ImgPreview
+        Handler.Image
+        Handler.ImageUpload
         Handler.FindCountry
         Handler.FindPlace
         Handler.Home
-        Handler.Image
-        Handler.ImageUpload
-        Handler.ImgPreview
         Handler.Preview
-        Handler.Story
-        Model
     ghc-options: -Wall -ferror-spans
 
 executable location-import
     main-is: location-import.hs
     build-depends:
-        base -any,
-        time -any,
-        filepath -any,
-        directory -any,
-        text -any,
+        base >=4.8,
         bytestring -any,
         conduit -any,
-        persistent -any,
-        persistent-sqlite -any,
-        data-default -any,
-        stm -any,
         conduit-extra -any,
-        resourcet -any,
-        blaze-markup -any,
-        shakespeare -any,
         containers -any,
-        base64-bytestring -any,
-        blaze-builder -any,
+        persistent -any,
+        persistent-postgresql -any,
+        persistent-sqlite -any,
+        text -any,
+        time -any,
         transformers -any,
-        yesod -any,
-        aeson -any,
-        persistent-postgresql -any
+        yesod -any
     default-language: Haskell2010
     hs-source-dirs: locations src
     other-modules:
-        Config
         InsertCountries
         InsertPlaces
         Model
+        Config
     ghc-options: -Wall -ferror-spans
-
