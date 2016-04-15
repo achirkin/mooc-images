@@ -1,0 +1,15 @@
+-- Uploading stories
+/share                ImageUploadR GET POST
+
+-- Viewing stories
+/                     HomeR        GET
+/story/#StoryId       StoryR       GET
+/story/#StoryId/image ImageR       GET
+/story/#StoryId/thumb ImgPreviewR  GET
+
+-- JSON API
+/country FindCountryR GET
+/place   FindPlaceR   GET
+
+-- static sources
+/static StaticR EmbeddedStatic getStatic

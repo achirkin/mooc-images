@@ -1,0 +1,68 @@
+<!-- css -->
+<link href="@{StaticR css_base_min_css}" rel="stylesheet">
+<link href="@{StaticR css_project_min_css}" rel="stylesheet">
+
+<!-- header of the page -->
+<header class="header header-transparent header-waterfall ui-header">
+
+<!-- content -->
+<main class="content">
+  <div class="content-header ui-content-header">
+    <div class="container">
+      <h1 class="content-heading">EdX User Stories
+  <div class="container">
+    <section class="content-inner margin-top-no">
+
+      <div class="row">
+        <div class="col-lg-7 col-md-8 col-sm-9">
+          <div class="card margin-bottom-no">
+            <div class="card-main">
+              <div class="card-inner">
+                $if null storedFiles
+                  <p>No stories have been uploaded yet.
+                $else
+                  <p>On this page you will find a list of stories uploaded by edX students.
+
+      <div class="ui-card-wrap">
+        <div class="row">
+          $if null storedFiles
+          $else
+            $forall (i, student, comment, createTime, country, place) <- storedFiles
+              <div class="col-lg-4 col-md-6 col-sm-9 col-xs-9">
+                <div class="card">
+                  <aside class="card-side card-side-img pull-left card-side-moocimg">
+                    <img src="@{ImgPreviewR i}" width="200px" height="200px">
+                  <div class="card-main">
+                    <div class="card-inner">
+                      <p class="card-heading">
+                        <span style="display: inline-block">
+                          #{country},
+                        <span style="display: inline-block">
+                          #{place}
+                      <p>
+                        $case student
+                          $of Nothing
+                          $of Just sname
+                            #{sname}<br>
+                        #{show $ utctDay createTime}
+                      <p class="comment-preview">
+                        #{shortenText comment}
+                <div class="hoverbutton">
+                  <a class="btn btn-flat waves-attach call-modal" href="@{StoryR i}">
+
+<div aria-hidden="true" class="modal fade" tabindex="-1" role="dialog" id="modals-container">
+
+<!-- js -->
+<script type="text/javascript" src="@{StaticR js_jquery_2_2_3_min_js}">
+<script type="text/javascript" src="@{StaticR js_base_min_js}">
+<script type="text/javascript" src="@{StaticR js_project_min_js}">
+<script type="text/javascript">
+  "use strict"
+  \$("a.call-modal").click(function(e){
+    e.preventDefault();
+    \$("#modals-container").load($(this).attr("href"));
+    \$("#modals-container").modal('show');
+  });
+  \$("#modals-container").on("hidden.bs.modal", function (e) {
+    \$("#modals-container").empty();
+  });
