@@ -60,3 +60,11 @@ Place
     latitude       Double
     longitude      Double
     GeonameId      geonameId
+
+OldStory
+    image ImagePreviewId
+    comment Text Maybe
+    title   Text
+    resource EdxResourceId
+    author  Text Maybe
+    creationTime  UTCTime Maybe default=CURRENT_TIMESTAMP
