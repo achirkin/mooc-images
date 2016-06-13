@@ -94,7 +94,7 @@ executable prevcourses-import
     main-is: prevcourses-import.hs
     build-depends:
         base >=4.8,
-        directory -any,
+        directory >=1.2.5.0,
         bytestring -any,
         conduit -any,
         conduit-extra -any,
@@ -105,7 +105,10 @@ executable prevcourses-import
         text -any,
         time -any,
         transformers -any,
-        yesod -any
+        yesod -any,
+        easy-file -any,
+        resourcet -any,
+        gd -any
     default-language: Haskell2010
     hs-source-dirs: prevcourses src
     other-modules:

@@ -62,9 +62,10 @@ Place
     GeonameId      geonameId
 
 OldStory
+    resource EdxResourceId
     image ImagePreviewId
     comment Text Maybe
     title   Text
-    resource EdxResourceId
     author  Text Maybe
     creationTime  UTCTime Maybe default=CURRENT_TIMESTAMP
+    deriving Show
