@@ -9,11 +9,12 @@
 --
 -- Hard-coded country fields
 -----------------------------------------------------------------------------
-{-# LANGUAGE OverloadedStrings #-}
 
 module InsertCountries
     ( insertCountries
     ) where
+
+import Prelude hiding (id)
 
 import Model
 import Database.Persist

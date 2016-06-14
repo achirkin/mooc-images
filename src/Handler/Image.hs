@@ -18,10 +18,7 @@ module Handler.Image
 
 import qualified Data.Text.Encoding as Text
 
-import Yesod
-
-import Foundation
-import Model
+import Import
 
 getImageR :: Key ImagePreview -> Handler TypedContent
 getImageR ident = do

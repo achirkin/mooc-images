@@ -20,7 +20,9 @@ module Main
     ( main
     ) where
 
-
+import Prelude (flip, ($))
+--import ClassyPrelude.Yesod
+import Data.Yaml.Config
 import Database.Persist.Sql
 import Data.Conduit
 import qualified Data.Conduit.Text as CT
@@ -28,8 +30,8 @@ import qualified Data.Conduit.Binary as CB
 import System.IO
 import System.Environment
 
-import Config
 import Model
+import Settings
 import InsertCountries
 import InsertPlaces
 
@@ -45,8 +47,14 @@ import InsertPlaces
 main :: IO ()
 main = do
   fname:_ <- getArgs
+  -- Get the settings from all relevant sources
+  settings <- loadYamlSettings [] -- loadYamlSettingsArgs
+        -- fall back to compile-time values, set to [] to require values at runtime
+        [configSettingsYmlValue]
+        -- allow environment variables to override
+        useEnv
   withFile fname ReadMode $ \resHandle -> do
-    pool <- createPoolConfig persistConfig
+    pool <- createPoolConfig $ appDatabaseConf settings
     flip runSqlPool pool $ do
       -- create tables
       runMigration migrateAll

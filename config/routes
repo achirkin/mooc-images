@@ -1,17 +1,26 @@
+-- authorization
+-- /auth   AuthR   Auth   getAuth
+
+/favicon.ico FaviconR GET
+/robots.txt RobotsR GET
+
 -- Uploading stories
 /share                ImageUploadR GET POST
 
 -- Viewing stories
 /                            HomeR        GET
-/old                         OldHomeR     GET
-/oldstory/#OldStoryId        OldStoryR    GET
+
 /story/#StoryId              StoryR       GET
 /story/#ImagePreviewId/image ImageR       GET
 /story/#ImagePreviewId/thumb ImgPreviewR  GET
+
+-- show older courses
+/old                         OldHomeR     GET
+/oldstory/#OldStoryId        OldStoryR    GET
 
 -- JSON API
 /country FindCountryR GET
 /place   FindPlaceR   GET
 
 -- static sources
-/static StaticR EmbeddedStatic getStatic
+/static StaticR Static appStatic

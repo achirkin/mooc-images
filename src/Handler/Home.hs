@@ -1,39 +1,15 @@
-{-# LANGUAGE GADTs #-}
------------------------------------------------------------------------------
--- |
--- Module      :  Handler.Home
--- Copyright   :  (c) Artem Chirkin
--- License     :  MIT
---
--- Maintainer  :  Artem Chirkin <chirkin@arch.ethz.ch>
--- Stability   :  experimental
---
---
------------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Handler.Home where
 
 
---import Control.Monad.Trans.Resource (runResourceT)
---import Data.Conduit
---import Data.Conduit.Binary
-import Database.Persist.Sql
-import Data.Default
-import Data.Maybe (fromMaybe)
-import Data.Time
-import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Read as Text
---import qualified Data.ByteString as S
---import qualified Data.ByteString.Lazy as L
-import Yesod
-import Yesod.Default.Util
---import Yesod.Auth
 
-import Foundation
-import Model
+import Import
+
+--import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3,
+--                              withSmallInput)
+--import Text.Julius (RawJS (..))
+
 
 getHomeR :: Handler Html
 getHomeR = do
@@ -59,7 +35,7 @@ getHomeR = do
 
     defaultLayout $ do
         setTitle "EdX User Stories"
-        $(widgetFileNoReload def "home")
+        $(widgetFile "home")
 
 shortLength :: Int
 shortLength = 140
@@ -110,7 +86,7 @@ getOldHomeR = do
 
     defaultLayout $ do
         setTitle "EdX User Stories"
-        $(widgetFileNoReload def "home")
+        $(widgetFile "home")
 
 
 
@@ -133,4 +109,3 @@ maybeLimit Nothing = ndef
 maybeLimit (Just m) = case Text.decimal m of
     Left _ -> ndef
     Right (n,_) -> min nmax n
-

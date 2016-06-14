@@ -16,17 +16,12 @@ module Handler.ImgPreview
     ( getImgPreviewR
     ) where
 
-import qualified Data.ByteString as SB
-
-import Yesod
-
-import Foundation
-import Model
+import Import
 
 getImgPreviewR :: Key ImagePreview -> Handler TypedContent
 getImgPreviewR ident = do
     img <- runDB $ get404 ident
     addHeader "Content-Disposition" "inline"
-    sendResponse (("image/png" :: SB.ByteString), toContent $ imagePreviewContent img)
+    sendResponse (("image/png" :: ByteString), toContent $ imagePreviewContent img)
 
 

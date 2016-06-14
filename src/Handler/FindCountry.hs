@@ -17,14 +17,13 @@ module Handler.FindCountry
 import Data.Conduit
 import Database.Persist.Sql
 import qualified Data.Conduit.List as CL
-import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Read as Text
-import Blaze.ByteString.Builder (Builder)
+import qualified Blaze.ByteString.Builder as BL (Builder)
 import Data.Aeson.Encode as Aeson
 import Yesod
 
-import Foundation
+import Import
 
 -- | Default number of results to return
 ndef :: Int
@@ -91,7 +90,7 @@ maybeQuery (Just q) = Just (PersistText $ Text.toLower q, Text.length q)
 
 
 streamJSONArray :: Monad m
-                => Conduit (Flush Builder) m (Flush Builder)
+                => Conduit (Flush BL.Builder) m (Flush BL.Builder)
 streamJSONArray = encodeEntryStart
   where
     encodeEntryStart = await >>= sendEntryStart

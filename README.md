@@ -1,4 +1,5 @@
-#### mooc-images
+## mooc-images
+=================================================
 
 A small web service based on yesod.
 Developed to support edX courses provided by the Chair iA at ETH Zurich.
@@ -8,14 +9,7 @@ Provides two pages:
 2. `/` - view images uploaded by students.
 
 
-
-#### location-import
-
-Command-line tool to upload locations from [geonames.org](http://www.geonames.org/).
-Need to run this tools at least once before running the web service;
-otherwise, users won't be able upload any images! 
-
-##### Dependencies:
+##### Native dependencies:
 
 Uses [`GD`](http://libgd.github.io/) library for making image previews,
 available on Ubuntu via
@@ -24,4 +18,38 @@ available on Ubuntu via
 Needs a PostgreSQL server and client libraries if one uses this database,
 available on Ubuntu via
 > apt-get install postgresql libpq-dev
+
+
+#### Using yesod toolset for development and deployment
+
+This requires `yesod-bin` haskell package that is available in hackage and stackage.
+
+Deploy mooc-images to a configured keter server:
+```
+yesod keter
+```
+
+Run mooc-images in development mode:
+```
+yesod devel
+```
+
+Run test suite:
+```
+yesod test
+```
+
+
+#### location-import
+
+Command-line tool to upload locations from [geonames.org](http://www.geonames.org/).
+Need to run this tools at least once before running the web service;
+otherwise, users won't be able upload any images! 
+
+
+#### prevcourses-import
+
+Command-line tool to upload image from exported edX discussions
+
+
 

@@ -10,13 +10,13 @@
 -- Import places from a tab-separated text file provided by GeoNames
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE OverloadedStrings #-}
 
 module InsertPlaces
     ( insertPlaces
     ) where
 
 
+import Prelude hiding (id)
 
 import Data.Conduit
 import qualified Data.Conduit.List as CL

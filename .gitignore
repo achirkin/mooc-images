@@ -16,6 +16,7 @@ cabal.config
 
 # app-specific
 *.sqlite
+*.sqlite3
 *-shm
 *-wal
 *.aes
@@ -23,3 +24,6 @@ cabal.config
 
 # stack
 .stack-work
+
+tmp/
+yesod-devel/

@@ -10,12 +10,13 @@
 -- The executable is intedent for importing old images from edX discussions,
 -- sorted into folders.
 -----------------------------------------------------------------------------
-{-# LANGUAGE OverloadedStrings, TypeFamilies #-}
 
 module Main
     ( main
     ) where
 
+import Prelude
+import Data.Yaml.Config
 
 import Data.Conduit
 import qualified Data.Conduit.Binary as CB
@@ -38,11 +39,13 @@ import Data.List (isPrefixOf, isSuffixOf)
 import Data.Time.Format
 import Graphics.GD.ByteString
 
-import Config
-import Model
 import Control.Monad.Trans.Maybe
 import Control.Exception (SomeException,try)
 import Data.Maybe (catMaybes)
+
+import Model
+import Settings
+
 
 type DBEnv x = ReaderT (PersistEntityBackend x) IO
 
@@ -54,7 +57,12 @@ previewSize = 400
 main :: IO ()
 main = do
     fname:_ <- getArgs
-    pool <- createPoolConfig persistConfig
+    settings <- loadYamlSettings [] -- loadYamlSettingsArgs
+      -- fall back to compile-time values, set to [] to require values at runtime
+      [configSettingsYmlValue]
+      -- allow environment variables to override
+      useEnv
+    pool <- createPoolConfig $ appDatabaseConf settings
     flip runSqlPool pool $ do
       -- create tables
       runMigration migrateAll

@@ -1,14 +1,14 @@
 name: mooc-images
-version: 0.9
-cabal-version: 1.22
+version: 1.0
+cabal-version: >=1.22
 build-type: Simple
 license: MIT
 license-file: LICENSE
 copyright: (c) Artem Chirkin
 maintainer: Artem Chirkin <chirkin@arch.ethz.ch>
 stability: experimental
-homepage: http://ia.arch.ethz.ch/achirkin
-bug-reports: mailto:chirkin@arch.ethz.ch
+homepage: https://github.com/achirkin/mooc-images
+bug-reports: https://github.com/achirkin/mooc-images/issues
 synopsis: EdX MOOC image upload service
 description:
     A small web service based on yesod.
@@ -16,46 +16,36 @@ description:
     Provides two pages:
     1) share - a post-form to be embedded into edX for uploading images;
     2) / - view images uploaded by students.
+    3) /old - view imported images from previous courses.
+    Many thanks to yesodweb group for the project and the templates!
 category: Web
 author: Artem Chirkin
 
-executable mooc-images
-    main-is: Main.hs
-    build-depends:
-        aeson -any,
-        base >=4.8,
-        base64-bytestring -any,
-        blaze-builder -any,
-        blaze-markup -any,
-        bytestring -any,
-        case-insensitive -any,
-        conduit -any,
-        conduit-extra -any,
-        containers -any,
-        data-default -any,
-        gd -any,
-        http-conduit -any,
-        ltiv1p1 -any,
-        monad-logger -any,
-        persistent -any,
-        persistent-postgresql -any,
-        persistent-sqlite -any,
-        resourcet -any,
-        shakespeare -any,
-        text -any,
-        time -any,
-        transformers -any,
-        wai -any,
-        yesod -any,
-        yesod-core -any,
-        yesod-static -any
-    default-language: Haskell2010
-    hs-source-dirs: src
-    other-modules:
+source-repository head
+    type: git
+    location: https://github.com/achirkin/mooc-images.git
+
+flag dev
+    description:
+        Turn on development settings, like auto-reload templates.
+    default: False
+
+flag library-only
+    description:
+        Build for use with "yesod devel"
+    default: False
+
+library
+
+    if (flag(dev) || flag(library-only))
+        cpp-options: -DDEVELOPMENT
+        ghc-options: -Wall -fwarn-tabs -O0
+    else
+        ghc-options: -Wall -fwarn-tabs -O2
+    exposed-modules:
+        Application
         Foundation
-        Dispatch
-        Model
-        Config
+        Handler.Common
         Handler.ImgPreview
         Handler.Image
         Handler.ImageUpload
@@ -63,9 +53,117 @@ executable mooc-images
         Handler.FindPlace
         Handler.Home
         Handler.Story
-    ghc-options: -Wall -ferror-spans
+        Import
+        Import.NoFoundation
+        Model
+        Settings
+        Settings.StaticFiles
+    build-depends:
+        base >=4 && <5,
+        yesod >=1.4.3 && <1.5,
+        yesod-core >=1.4.17 && <1.5,
+        yesod-auth >=1.4.0 && <1.5,
+        yesod-static >=1.4.0.3 && <1.6,
+        yesod-form >=1.4.0 && <1.5,
+        yesod-websockets -any,
+        classy-prelude >=0.10.2,
+        classy-prelude-conduit >=0.10.2,
+        classy-prelude-yesod >=0.10.2,
+        bytestring >=0.9 && <0.11,
+        text >=0.11 && <2.0,
+        persistent >=2.0 && <2.6,
+        persistent-sqlite >=2.1.1 && <2.6,
+        persistent-postgresql -any,
+        persistent-template >=2.0 && <2.6,
+        template-haskell -any,
+        shakespeare >=2.0 && <2.1,
+        hjsmin >=0.1 && <0.3,
+        monad-control >=0.3 && <1.1,
+        wai-extra >=3.0 && <3.1,
+        yaml >=0.8 && <0.9,
+        http-conduit >=2.1 && <2.2,
+        directory >=1.1 && <1.3,
+        warp >=3.0 && <3.3,
+        data-default -any,
+        aeson >=0.6 && <0.12,
+        conduit >=1.0 && <2.0,
+        conduit-extra >=1.0 && <2.0,
+        monad-logger >=0.3 && <0.4,
+        fast-logger >=2.2 && <2.5,
+        wai-logger >=2.2 && <2.3,
+        file-embed -any,
+        safe -any,
+        unordered-containers -any,
+        containers -any,
+        vector -any,
+        time -any,
+        case-insensitive -any,
+        wai -any,
+        stm -any,
+        time -any,
+        ltiv1p1 -any,
+        gd -any,
+        resourcet -any,
+        blaze-markup -any,
+        blaze-builder -any,
+        transformers -any,
+        base64-bytestring -any
+    default-language: Haskell2010
+    default-extensions: TemplateHaskell QuasiQuotes OverloadedStrings
+                        NoImplicitPrelude MultiParamTypeClasses TypeFamilies GADTs
+                        GeneralizedNewtypeDeriving FlexibleContexts FlexibleInstances
+                        EmptyDataDecls NoMonomorphismRestriction DeriveDataTypeable
+                        ViewPatterns TupleSections RecordWildCards
+    hs-source-dirs: src
+
+executable mooc-images
+
+    if flag(library-only)
+        buildable: False
+    main-is: main.hs
+    build-depends:
+        base -any,
+        mooc-images -any
+    default-language: Haskell2010
+    hs-source-dirs: app
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N
+
+test-suite mooc-images-test
+    type: exitcode-stdio-1.0
+    main-is: Spec.hs
+    build-depends:
+        base -any,
+        mooc-images -any,
+        yesod-test >=1.5.0.1 && <1.6,
+        yesod-core -any,
+        yesod -any,
+        persistent -any,
+        persistent-sqlite -any,
+        resourcet -any,
+        monad-logger -any,
+        shakespeare -any,
+        transformers -any,
+        hspec >=2.0.0,
+        classy-prelude -any,
+        classy-prelude-yesod -any,
+        aeson -any
+    default-language: Haskell2010
+    default-extensions: TemplateHaskell QuasiQuotes OverloadedStrings
+                        NoImplicitPrelude CPP MultiParamTypeClasses TypeFamilies GADTs
+                        GeneralizedNewtypeDeriving FlexibleContexts FlexibleInstances
+                        EmptyDataDecls NoMonomorphismRestriction DeriveDataTypeable
+                        ViewPatterns TupleSections
+    hs-source-dirs: test
+    other-modules:
+        Handler.CommonSpec
+        Handler.HomeSpec
+        TestImport
+    ghc-options: -Wall
 
 executable location-import
+
+    if flag(library-only)
+        buildable: False
     main-is: location-import.hs
     build-depends:
         base >=4.8,
@@ -79,18 +177,29 @@ executable location-import
         text -any,
         time -any,
         transformers -any,
-        yesod -any
+        yesod -any,
+        classy-prelude-yesod >=0.10.2,
+        yaml -any,
+        aeson -any,
+        template-haskell,
+        file-embed,
+        ltiv1p1 -any
     default-language: Haskell2010
+    default-extensions: TemplateHaskell TypeFamilies OverloadedStrings
+                        MultiParamTypeClasses GADTs GeneralizedNewtypeDeriving
+                        NoImplicitPrelude RecordWildCards
     hs-source-dirs: locations src
     other-modules:
         InsertCountries
         InsertPlaces
         Model
-        Config
     ghc-options: -Wall -ferror-spans
 
 
 executable prevcourses-import
+
+    if flag(library-only)
+        buildable: False
     main-is: prevcourses-import.hs
     build-depends:
         base >=4.8,
@@ -108,10 +217,18 @@ executable prevcourses-import
         yesod -any,
         easy-file -any,
         resourcet -any,
-        gd -any
+        gd -any,
+        classy-prelude-yesod >=0.10.2,
+        yaml -any,
+        aeson -any,
+        template-haskell,
+        file-embed,
+        ltiv1p1 -any
     default-language: Haskell2010
+    default-extensions: TemplateHaskell TypeFamilies OverloadedStrings
+                        MultiParamTypeClasses GADTs GeneralizedNewtypeDeriving
+                        NoImplicitPrelude RecordWildCards
     hs-source-dirs: prevcourses src
     other-modules:
         Model
-        Config
     ghc-options: -Wall -ferror-spans

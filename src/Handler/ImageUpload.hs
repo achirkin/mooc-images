@@ -11,26 +11,20 @@
 -- |
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Handler.ImageUpload where
 
-import Control.Monad (unless)
-import Control.Monad.Trans.Resource (runResourceT)
 import Data.Conduit
 import Data.Conduit.Binary
-import Data.Maybe (isJust)
+--import Data.Maybe (isJust)
 import Data.CaseInsensitive (original)
 
 import Data.Default
-import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Lazy as LText
 import qualified Data.Text.Lazy.Encoding as LText
-import qualified Data.ByteString as BS
+--import qualified Data.ByteString as BS
 --import qualified Data.ByteString.Char8       as BSC
 --import qualified Data.ByteString.Lazy as BSL
 import Yesod
@@ -41,22 +35,11 @@ import Text.Blaze (ToMarkup)
 --import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Base64.Lazy as Base64L
 
-import Foundation
-import Model
+import Import
 
-import Network.Wai (requestHeaders)
+import qualified Network.Wai as Wai (requestHeaders)
 import Web.LTI
 import Control.Monad.Trans.Except (runExceptT)
-
-
-t_oauth_consumer_key :: BS.ByteString
-t_oauth_consumer_key = "lti_key"
-
-t_oauth_secret :: BS.ByteString
-t_oauth_secret = "lti_secret"
-
-t_lti :: LTIProvider
-t_lti = newLTIProvider t_oauth_consumer_key t_oauth_secret
 
 
 getImageUploadR :: Handler Html
@@ -141,6 +124,7 @@ setupSession continue = do
         liftIO $ putStrLn "\n\nStarting Session\n"
         deleteSession "resource_link_id"
         yreq <- getRequest
+        t_lti <- appLTICredentials . appSettings <$> getYesod
         eltiRequest <- runExceptT $ processYesodRequest t_lti yreq
         case eltiRequest of
           Left err -> do
@@ -166,7 +150,7 @@ requestDebugInfo = do
     yreq <- getRequest
     wreq <- waiRequest
     return $ "\nRequest HEADERS:\n"
-           % Text.unlines (map (\(p,v) -> Text.decodeUtf8 (original p) % ": " % Text.decodeUtf8 v) (requestHeaders wreq))
+           % Text.unlines (map (\(p,v) -> Text.decodeUtf8 (original p) % ": " % Text.decodeUtf8 v) (Wai.requestHeaders wreq))
            % "\n"
            % "\nRequest GET parameters:\n"
            % Text.unlines (map (\(p,v) -> p % ": " % v) (reqGetParams yreq))
