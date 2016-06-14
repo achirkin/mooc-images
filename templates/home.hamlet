@@ -13,6 +13,7 @@
   <div class="container">
     <section class="content-inner margin-top-no">
 
+      <!-- header message -->
       <div class="row">
         <div class="col-lg-7 col-md-8 col-sm-9">
           <div class="card margin-bottom-no">
@@ -23,22 +24,27 @@
                 $else
                   <p>On this page you will find a list of stories uploaded by edX students.
 
+      <!-- content -->
       <div class="ui-card-wrap">
         <div class="row">
           $if null storedFiles
           $else
-            $forall (i, student, comment, createTime, country, place) <- storedFiles
+            $forall (imgI, student, comment, createTime, country, place, imgRoute, title) <- storedFiles
               <div class="col-lg-4 col-md-6 col-sm-9 col-xs-9">
                 <div class="card">
                   <aside class="card-side card-side-img pull-left card-side-moocimg">
-                    <img src="@{ImgPreviewR i}" width="200px" height="200px">
+                    <img src="@{imgI}" width="200px" height="200px">
                   <div class="card-main">
                     <div class="card-inner">
                       <p class="card-heading">
-                        <span style="display: inline-block">
-                          #{country},
-                        <span style="display: inline-block">
-                          #{place}
+                        $case title
+                          $of Nothing
+                            <span style="display: inline-block">
+                              #{country},
+                            <span style="display: inline-block">
+                              #{place}
+                          $of Just t
+                            <span style="display: inline-block">#{t}
                       <p>
                         $case student
                           $of Nothing
@@ -48,7 +54,23 @@
                       <p class="comment-preview">
                         #{shortenText comment}
                 <div class="hoverbutton">
-                  <a class="btn btn-flat waves-attach call-modal" href="@{StoryR i}">
+                  <a class="btn btn-flat waves-attach call-modal" href="@{imgRoute}">
+
+
+      <!-- footer with page numbers -->
+      $if length pages <= 1
+      $else
+       <div class="row">
+        <div class="col-lg-9 col-md-9 col-sm-9">
+          <div class="card margin-bottom-no">
+            <div class="card-main">
+              <div class="card-inner">
+               $forall (i,start) <- pages
+                $if i == p
+                  <p style="margin:2px;padding:0;display:inline">#{i}
+                $else
+                  <a style="margin:2px;padding:0;display:inline" href="@{proute}?o=#{start}&l=#{l}">#{i}
+
 
 <div aria-hidden="true" class="modal fade" tabindex="-1" role="dialog" id="modals-container">
 

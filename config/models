@@ -67,5 +67,5 @@ OldStory
     comment Text Maybe
     title   Text
     author  Text Maybe
-    creationTime  UTCTime Maybe default=CURRENT_TIMESTAMP
+    creationTime  UTCTime default=CURRENT_TIMESTAMP
     deriving Show

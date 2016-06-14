@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Handler.Home
@@ -18,11 +19,13 @@ module Handler.Home where
 --import Control.Monad.Trans.Resource (runResourceT)
 --import Data.Conduit
 --import Data.Conduit.Binary
+import Database.Persist.Sql
 import Data.Default
+import Data.Maybe (fromMaybe)
 import Data.Time
 import Data.Text (Text)
---import Database.Persist.Sql (fromSqlKey)
 import qualified Data.Text as Text
+import qualified Data.Text.Read as Text
 --import qualified Data.ByteString as S
 --import qualified Data.ByteString.Lazy as L
 import Yesod
@@ -34,15 +37,24 @@ import Model
 
 getHomeR :: Handler Html
 getHomeR = do
-    storedFiles <- getImages >>= mapM (\(Entity i story) -> runDB $ do
+    l <- maybeLimit <$> lookupGetParam "l"
+    o' <- maybeOffset <$> lookupGetParam "o"
+    totalNumber <- runDB $ count ([] :: [Filter Story])
+    let p = o' `div` l
+        o = p * l
+        pages = zip ([0..]:: [Int]) [0,l..totalNumber]
+        proute = HomeR
+    storedFiles <- getStories o l >>= mapM (\(Entity i story) -> runDB $ do
         place <- get404 $ storyPlace story
         country <- get404 $ placeCountry place
         student <- get404 $ storyAuthor story
-        return (i, studentName student
+        return (ImgPreviewR $ storyImage story, studentName student
                , storyComment story
                , storyCreationTime story
                , countryName country
-               , placeName place)
+               , placeName place
+               , StoryR i
+               , (Nothing :: Maybe Text))
       )
 
     defaultLayout $ do
@@ -70,5 +82,55 @@ shortenText t = dropInitSpace . remNewLines $
         dropInitSpace = Text.dropWhile (\c -> c == ' ' || c == '\n' || c == '\r' || c == '\t')
 
 
-getImages :: Handler [Entity Story]
-getImages = runDB $ selectList [] [Desc StoryCreationTime]
+getStories :: Int -> Int -> Handler [Entity Story]
+getStories offset limit = runDB $ selectList [] [Desc StoryCreationTime, OffsetBy offset, LimitTo limit]
+
+getOldStories :: Int -> Int -> Handler [Entity OldStory]
+getOldStories offset limit = runDB $ selectList [] [Desc OldStoryCreationTime, OffsetBy offset, LimitTo limit]
+
+
+getOldHomeR :: Handler Html
+getOldHomeR = do
+    l <- maybeLimit <$> lookupGetParam "l"
+    o' <- maybeOffset <$> lookupGetParam "o"
+    totalNumber <- runDB $ count ([] :: [Filter OldStory])
+    let p = o' `div` l
+        o = p * l
+        pages = zip ([0..]:: [Int]) [0,l..totalNumber]
+        proute = OldHomeR
+    storedFiles <- getOldStories o l >>= mapM (\(Entity i story) -> runDB $ do
+        return (ImgPreviewR $ oldStoryImage story, oldStoryAuthor story
+               , fromMaybe "" $ oldStoryComment story
+               , oldStoryCreationTime story
+               , ("no country specified" :: Text)
+               , ("no place specified" :: Text)
+               , OldStoryR i
+               , Just $ oldStoryTitle story)
+      )
+
+    defaultLayout $ do
+        setTitle "EdX User Stories"
+        $(widgetFileNoReload def "home")
+
+
+
+-- | Default number of results to return
+ndef :: Int
+ndef = 200
+
+-- | Maximum number of results to return
+nmax :: Int
+nmax = 1000
+
+maybeOffset :: Maybe Text -> Int
+maybeOffset Nothing = 0
+maybeOffset (Just m) = case Text.decimal m of
+    Left _ -> 0
+    Right (n,_) -> n
+
+maybeLimit :: Maybe Text -> Int
+maybeLimit Nothing = ndef
+maybeLimit (Just m) = case Text.decimal m of
+    Left _ -> ndef
+    Right (n,_) -> min nmax n
+

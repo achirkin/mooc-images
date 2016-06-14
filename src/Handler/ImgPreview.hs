@@ -23,11 +23,9 @@ import Yesod
 import Foundation
 import Model
 
-getImgPreviewR :: Key Story -> Handler TypedContent
+getImgPreviewR :: Key ImagePreview -> Handler TypedContent
 getImgPreviewR ident = do
-    img <- runDB $ do
-      ustory <- get404 ident
-      get404 $ storyImage ustory
+    img <- runDB $ get404 ident
     addHeader "Content-Disposition" "inline"
     sendResponse (("image/png" :: SB.ByteString), toContent $ imagePreviewContent img)
 

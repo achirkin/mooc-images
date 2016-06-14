@@ -62,7 +62,7 @@ executable mooc-images
         Handler.FindCountry
         Handler.FindPlace
         Handler.Home
-        Handler.Preview
+        Handler.Story
     ghc-options: -Wall -ferror-spans
 
 executable location-import

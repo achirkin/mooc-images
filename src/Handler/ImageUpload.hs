@@ -50,10 +50,10 @@ import Control.Monad.Trans.Except (runExceptT)
 
 
 t_oauth_consumer_key :: BS.ByteString
-t_oauth_consumer_key = "test_lti_key"
+t_oauth_consumer_key = "lti_key"
 
 t_oauth_secret :: BS.ByteString
-t_oauth_secret = "test_lti_secret"
+t_oauth_secret = "lti_secret"
 
 t_lti :: LTIProvider
 t_lti = newLTIProvider t_oauth_consumer_key t_oauth_secret

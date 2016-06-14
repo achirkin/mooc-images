@@ -3,15 +3,15 @@
 <link href="@{StaticR css_project_min_css}" rel="stylesheet">
 
 <!-- content -->
-$with (student, comment, createTime, country, place) <- story
+$with (student, comment, createTime, _country, _place) <- story
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-heading">
           <a class="modal-close icon-4x" data-dismiss="modal">×
           <p class="modal-title">
-            #{country}, #{place}
+            #{title}
         <div style="margin: 0 10px 0 10px; text-align: center">
-          <img src="@{ImageR ident}" style="max-width: 100%; max-height: 60vh">
+          <img src="@{ImageR imgId}" style="max-width: 100%; max-height: 60vh">
         <div class="modal-inner">
           <p style="font-style: italic">
             Uploaded on #{show $ utctDay createTime}

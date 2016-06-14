@@ -22,13 +22,13 @@ import qualified Data.Conduit.Binary as CB
 import qualified Data.Conduit.Text as CT
 import qualified Data.Conduit.List as CL
 import Database.Persist.Sql
-import Database.Persist
+--import Database.Persist
 import Control.Monad.Trans.Reader (ReaderT)
 import Control.Monad.Trans.Class
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Resource (runResourceT)
 import qualified Data.Text as Text
-import System.IO
+--import System.IO
 import System.Environment
 import System.Directory
 import qualified System.EasyFile as Path
@@ -127,7 +127,7 @@ parseDiscussionTxt file = runResourceT $
         , oldStoryComment = Just comment
         , oldStoryTitle = title
         , oldStoryAuthor = Just authorName
-        , oldStoryCreationTime = Just dateTime
+        , oldStoryCreationTime = dateTime
         }
 
 --Discussion:
