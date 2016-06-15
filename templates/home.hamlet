@@ -29,32 +29,25 @@
         <div class="row">
           $if null storedFiles
           $else
-            $forall (imgI, student, comment, createTime, country, place, imgRoute, title) <- storedFiles
+            $forall f <- storedFiles
               <div class="col-lg-4 col-md-6 col-sm-9 col-xs-9">
                 <div class="card">
                   <aside class="card-side card-side-img pull-left card-side-moocimg">
-                    <img src="@{imgI}" width="200px" height="200px">
+                    <img src="@{ImgPreviewR $ svImage f}" width="200px" height="200px">
                   <div class="card-main">
                     <div class="card-inner">
                       <p class="card-heading">
-                        $case title
-                          $of Nothing
-                            <span style="display: inline-block">
-                              #{country},
-                            <span style="display: inline-block">
-                              #{place}
-                          $of Just t
-                            <span style="display: inline-block">#{t}
+                        <span style="display: inline-block">#{svTitle f}
                       <p>
-                        $case student
+                        $case svAuthor f
                           $of Nothing
                           $of Just sname
                             #{sname}<br>
-                        #{show $ utctDay createTime}
+                        #{svTime f}
                       <p class="comment-preview">
-                        #{shortenText comment}
+                        #{shortComment f}
                 <div class="hoverbutton">
-                  <a class="btn btn-flat waves-attach call-modal" href="@{imgRoute}">
+                  <a class="btn btn-flat waves-attach call-modal" href="@{svRoute f}">
 
 
       <!-- footer with page numbers -->

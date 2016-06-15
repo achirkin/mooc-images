@@ -42,17 +42,25 @@ flag postgresql
 
 library
 
-    if (flag(postgresql) && !flag(dev))
-       cpp-options: -DPOSTGRESQL
+    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+        cpp-options: -DPOSTGRESQL
 
     if (flag(dev) || flag(library-only))
         cpp-options: -DDEVELOPMENT
         ghc-options: -Wall -fwarn-tabs -O0
     else
         ghc-options: -Wall -fwarn-tabs -O2
+
+    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+        build-depends:
+            persistent-postgresql -any
+    else
+        build-depends:
+            persistent-sqlite -any
     exposed-modules:
         Application
         Foundation
+        Foundation.StoryView
         Handler.Common
         Handler.ImgPreview
         Handler.Image
@@ -66,11 +74,6 @@ library
         Model
         Settings
         Settings.StaticFiles
-
-    if (flag(postgresql) && !flag(dev))
-       build-depends: persistent-postgresql -any
-    else
-       build-depends: persistent-sqlite -any
     build-depends:
         base >=4 && <5,
         yesod >=1.4.3 && <1.5,
@@ -129,8 +132,9 @@ library
 
 executable mooc-images
 
-    if (flag(postgresql) && !flag(dev))
-       cpp-options: -DPOSTGRESQL
+    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+        cpp-options: -DPOSTGRESQL
+
     if flag(library-only)
         buildable: False
     main-is: main.hs
@@ -141,16 +145,107 @@ executable mooc-images
     hs-source-dirs: app
     ghc-options: -threaded -rtsopts -with-rtsopts=-N
 
-test-suite mooc-images-test
+executable location-import
+
+    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+        cpp-options: -DPOSTGRESQL
+
+    if flag(library-only)
+        buildable: False
 
     if (flag(postgresql) && !flag(dev))
-       cpp-options: -DPOSTGRESQL
+        build-depends:
+            persistent-postgresql -any
+    else
+        build-depends:
+            persistent-sqlite -any
+    main-is: location-import.hs
+    build-depends:
+        base >=4.8,
+        bytestring -any,
+        conduit -any,
+        conduit-extra -any,
+        containers -any,
+        persistent -any,
+        text -any,
+        time -any,
+        transformers -any,
+        yesod -any,
+        classy-prelude-yesod >=0.10.2,
+        yaml -any,
+        aeson -any,
+        template-haskell -any,
+        file-embed -any,
+        ltiv1p1 -any
+    default-language: Haskell2010
+    default-extensions: TemplateHaskell TypeFamilies OverloadedStrings
+                        MultiParamTypeClasses GADTs GeneralizedNewtypeDeriving
+                        NoImplicitPrelude RecordWildCards
+    hs-source-dirs: locations src
+    other-modules:
+        InsertCountries
+        InsertPlaces
+        Model
+    ghc-options: -Wall -ferror-spans
+
+executable prevcourses-import
+
+    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+        cpp-options: -DPOSTGRESQL
+
+    if flag(library-only)
+        buildable: False
+
+    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+        build-depends:
+            persistent-postgresql -any
+    else
+        build-depends:
+            persistent-sqlite -any
+    main-is: prevcourses-import.hs
+    build-depends:
+        base >=4.8,
+        directory >=1.2.5.0,
+        bytestring -any,
+        conduit -any,
+        conduit-extra -any,
+        containers -any,
+        persistent -any,
+        text -any,
+        time -any,
+        transformers -any,
+        yesod -any,
+        easy-file -any,
+        resourcet -any,
+        gd -any,
+        classy-prelude-yesod >=0.10.2,
+        yaml -any,
+        aeson -any,
+        template-haskell -any,
+        file-embed -any,
+        ltiv1p1 -any
+    default-language: Haskell2010
+    default-extensions: TemplateHaskell TypeFamilies OverloadedStrings
+                        MultiParamTypeClasses GADTs GeneralizedNewtypeDeriving
+                        NoImplicitPrelude RecordWildCards
+    hs-source-dirs: prevcourses src
+    other-modules:
+        Model
+    ghc-options: -Wall -ferror-spans
+
+test-suite mooc-images-test
+
+    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+        cpp-options: -DPOSTGRESQL
+
+    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+        build-depends:
+            persistent-postgresql -any
+    else
+        build-depends:
+            persistent-sqlite -any
     type: exitcode-stdio-1.0
     main-is: Spec.hs
-    if (flag(postgresql) && !flag(dev))
-       build-depends: persistent-postgresql -any
-    else
-       build-depends: persistent-sqlite -any
     build-depends:
         base -any,
         mooc-images -any,
@@ -178,84 +273,3 @@ test-suite mooc-images-test
         Handler.HomeSpec
         TestImport
     ghc-options: -Wall
-
-executable location-import
-
-    if (flag(postgresql) && !flag(dev))
-       cpp-options: -DPOSTGRESQL
-    if flag(library-only)
-        buildable: False
-    main-is: location-import.hs
-    if (flag(postgresql) && !flag(dev))
-       build-depends: persistent-postgresql -any
-    else
-       build-depends: persistent-sqlite -any
-    build-depends:
-        base >=4.8,
-        bytestring -any,
-        conduit -any,
-        conduit-extra -any,
-        containers -any,
-        persistent -any,
-        text -any,
-        time -any,
-        transformers -any,
-        yesod -any,
-        classy-prelude-yesod >=0.10.2,
-        yaml -any,
-        aeson -any,
-        template-haskell,
-        file-embed,
-        ltiv1p1 -any
-    default-language: Haskell2010
-    default-extensions: TemplateHaskell TypeFamilies OverloadedStrings
-                        MultiParamTypeClasses GADTs GeneralizedNewtypeDeriving
-                        NoImplicitPrelude RecordWildCards
-    hs-source-dirs: locations src
-    other-modules:
-        InsertCountries
-        InsertPlaces
-        Model
-    ghc-options: -Wall -ferror-spans
-
-
-executable prevcourses-import
-
-    if (flag(postgresql) && !flag(dev))
-       cpp-options: -DPOSTGRESQL
-    if flag(library-only)
-        buildable: False
-    main-is: prevcourses-import.hs
-    if (flag(postgresql) && !flag(dev))
-       build-depends: persistent-postgresql -any
-    else
-       build-depends: persistent-sqlite -any
-    build-depends:
-        base >=4.8,
-        directory >=1.2.5.0,
-        bytestring -any,
-        conduit -any,
-        conduit-extra -any,
-        containers -any,
-        persistent -any,
-        text -any,
-        time -any,
-        transformers -any,
-        yesod -any,
-        easy-file -any,
-        resourcet -any,
-        gd -any,
-        classy-prelude-yesod >=0.10.2,
-        yaml -any,
-        aeson -any,
-        template-haskell,
-        file-embed,
-        ltiv1p1 -any
-    default-language: Haskell2010
-    default-extensions: TemplateHaskell TypeFamilies OverloadedStrings
-                        MultiParamTypeClasses GADTs GeneralizedNewtypeDeriving
-                        NoImplicitPrelude RecordWildCards
-    hs-source-dirs: prevcourses src
-    other-modules:
-        Model
-    ghc-options: -Wall -ferror-spans

@@ -9,14 +9,16 @@
 
 -- Viewing stories
 /                            HomeR        GET
+/old                         OldHomeR     GET
 
 /story/#StoryId              StoryR       GET
-/story/#ImagePreviewId/image ImageR       GET
-/story/#ImagePreviewId/thumb ImgPreviewR  GET
-
--- show older courses
-/old                         OldHomeR     GET
 /oldstory/#OldStoryId        OldStoryR    GET
+/story/#StoryId/delete       DeleteStoryR       GET
+/oldstory/#OldStoryId/delete DeleteOldStoryR    GET
+
+/image/#ImagePreviewId       ImageR       GET
+/thumb/#ImagePreviewId       ImgPreviewR  GET
+
 
 -- JSON API
 /country FindCountryR GET

@@ -1,14 +1,8 @@
 module Handler.Home where
 
 
-import qualified Data.Text as Text
 import qualified Data.Text.Read as Text
-
 import Import
-
---import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3,
---                              withSmallInput)
---import Text.Julius (RawJS (..))
 
 
 getHomeR :: Handler Html
@@ -20,49 +14,18 @@ getHomeR = do
         o = p * l
         pages = zip ([0..]:: [Int]) [0,l..totalNumber]
         proute = HomeR
-    storedFiles <- getStories o l >>= mapM (\(Entity i story) -> runDB $ do
-        place <- get404 $ storyPlace story
-        country <- get404 $ placeCountry place
-        student <- get404 $ storyAuthor story
-        return (ImgPreviewR $ storyImage story, studentName student
-               , storyComment story
-               , storyCreationTime story
-               , countryName country
-               , placeName place
-               , StoryR i
-               , (Nothing :: Maybe Text))
-      )
+    storedFiles <- runDB $ getStories o l >>= mapM viewStory
 
     defaultLayout $ do
         setTitle "EdX User Stories"
         $(widgetFile "home")
 
-shortLength :: Int
-shortLength = 140
 
-maxLines :: Int
-maxLines = 3
+getStories :: Int -> Int -> ReaderT SqlBackend Handler [Entity Story]
+getStories offset limit = selectList [] [Desc StoryCreationTime, OffsetBy offset, LimitTo limit]
 
-shortenText :: Text -> Text
-shortenText t = dropInitSpace . remNewLines $
-  if Text.length t < shortLength
-    then t
-    else remLong t `Text.append` "..."
-  where remLong = Text.dropEnd 1
-                . Text.dropWhileEnd (\c -> c /= ' ' && c /= '\n' && c /= '\t')
-                . Text.take shortLength
-        remNewLines = Text.dropWhileEnd (\c -> c == ' ' || c == '\n' || c == '\r' || c == '\t')
-                    . Text.unlines
-                    . take maxLines
-                    . Text.lines
-        dropInitSpace = Text.dropWhile (\c -> c == ' ' || c == '\n' || c == '\r' || c == '\t')
-
-
-getStories :: Int -> Int -> Handler [Entity Story]
-getStories offset limit = runDB $ selectList [] [Desc StoryCreationTime, OffsetBy offset, LimitTo limit]
-
-getOldStories :: Int -> Int -> Handler [Entity OldStory]
-getOldStories offset limit = runDB $ selectList [] [Desc OldStoryCreationTime, OffsetBy offset, LimitTo limit]
+getOldStories :: Int -> Int -> ReaderT SqlBackend Handler [Entity OldStory]
+getOldStories offset limit = selectList [] [Desc OldStoryCreationTime, OffsetBy offset, LimitTo limit]
 
 
 getOldHomeR :: Handler Html
@@ -74,15 +37,7 @@ getOldHomeR = do
         o = p * l
         pages = zip ([0..]:: [Int]) [0,l..totalNumber]
         proute = OldHomeR
-    storedFiles <- getOldStories o l >>= mapM (\(Entity i story) -> runDB $ do
-        return (ImgPreviewR $ oldStoryImage story, oldStoryAuthor story
-               , fromMaybe "" $ oldStoryComment story
-               , oldStoryCreationTime story
-               , ("no country specified" :: Text)
-               , ("no place specified" :: Text)
-               , OldStoryR i
-               , Just $ oldStoryTitle story)
-      )
+    storedFiles <- runDB $ getOldStories o l >>= mapM viewOldStory
 
     defaultLayout $ do
         setTitle "EdX User Stories"

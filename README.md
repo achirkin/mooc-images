@@ -53,3 +53,10 @@ Command-line tool to upload image from exported edX discussions
 
 
 
+#### Many thanks
+
+For the design template: [Daemonite's Material UI](https://github.com/Daemonite/material).
+
+For the geographical data: [geonames.org](http://www.geonames.org/).
+
+For the web server: [yesodweb](http://www.yesodweb.com/).
