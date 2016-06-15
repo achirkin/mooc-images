@@ -29,3 +29,12 @@
   white-space: pre-line
   overflow-y: hidden
   color: #555
+
+.modal-title-icon
+  color: #727272
+  cursor: pointer
+  display: block
+  font-size: 20px
+
+.modal-title-icon:focus, .modal-title-icon:hover
+  text-decoration: none

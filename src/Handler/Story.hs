@@ -16,13 +16,11 @@ module Handler.Story
     , getOldStoryR
     ) where
 
-import Data.Default
 import qualified Data.Text as Text
 import Data.Time
 import Text.Blaze (toMarkup)
 
 import Yesod
-import Yesod.Default.Util
 
 import Import
 
@@ -43,7 +41,7 @@ getStoryR ident = do
 
     defaultLayout $ do
         setTitle $ toMarkup title
-        $(widgetFileNoReload def "story")
+        $(widgetFile "story")
 
 
 
@@ -59,4 +57,4 @@ getOldStoryR ident = do
 
     defaultLayout $ do
         setTitle $ toMarkup title
-        $(widgetFileNoReload def "story")
+        $(widgetFile "story")

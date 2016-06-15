@@ -11,7 +11,7 @@ stanzas:
     exec: ../dist/build/mooc-images/mooc-images
 
     # Command line options passed to your application.
-    args: []
+    args: [/opt/keter/etc/moocimgsettings.yml]
 
     hosts:
       # You can specify one or more hostnames for your application to respond

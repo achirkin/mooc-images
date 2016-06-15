@@ -7,7 +7,9 @@ $with (student, comment, createTime, _country, _place) <- story
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-heading">
-          <a class="modal-close icon-4x" data-dismiss="modal">×
+          <p class="modal-close">
+            <a class="modal-title-icon icon" target="_blank" href="https://www.google.com/searchbyimage?image_url=@{ImageR imgId}" style="background-image: url(@{StaticR img_gsearch_png}); background-size: contain;">&#xe8b6;
+            <a class="modal-title-icon icon" data-dismiss="modal">&#xe5cd;
           <p class="modal-title">
             #{title}
         <div style="margin: 0 10px 0 10px; text-align: center">

@@ -12,7 +12,11 @@ import Data.Aeson                  (Result (..), fromJSON, withObject, (.!=),
                                     (.:?))
 import Data.FileEmbed              (embedFile)
 import Data.Yaml                   (decodeEither')
+#if POSTGRESQL
+import Database.Persist.Postgresql (PostgresConf)
+#else
 import Database.Persist.Sqlite     (SqliteConf)
+#endif
 import Language.Haskell.TH.Syntax  (Exp, Name, Q)
 import Yesod.Default.Config2       (applyEnvValue, configSettingsYml)
 import Yesod.Default.Util          (WidgetFileSettings, widgetFileNoReload,
@@ -22,6 +26,13 @@ import qualified Data.Text.Encoding as Text
 import Data.Conduit.Network
 import Web.LTI
 
+-- Go with Sqlite on development, and Postgres on production
+#if POSTGRESQL
+type PersistConf = PostgresConf
+#else
+type PersistConf = SqliteConf
+#endif
+
 
 -- | Runtime settings to configure this application. These settings can be
 -- loaded from various sources: defaults, environment variables, config files,
@@ -29,7 +40,7 @@ import Web.LTI
 data AppSettings = AppSettings
     { appStaticDir              :: String
     -- ^ Directory from which to serve static files.
-    , appDatabaseConf           :: SqliteConf
+    , appDatabaseConf           :: PersistConf
     -- ^ Configuration settings for accessing the database.
     , appRoot                   :: Maybe Text
     -- ^ Base for all generated URLs. If @Nothing@, determined
@@ -116,9 +127,24 @@ widgetFile = (if appReloadTemplates compileTimeAppSettings
 configSettingsYmlBS :: ByteString
 configSettingsYmlBS = $(embedFile configSettingsYml)
 
+configSettingsYmlDB :: FilePath
+#if POSTGRESQL
+configSettingsYmlDB = "config/settingsPostgreSQL.yml"
+#else
+configSettingsYmlDB = "config/settingsSqlite.yml"
+#endif
+
+configSettingsYmlDBBS :: ByteString
+#if POSTGRESQL
+configSettingsYmlDBBS = $(embedFile "config/settingsPostgreSQL.yml")
+#else
+configSettingsYmlDBBS = $(embedFile "config/settingsSqlite.yml")
+#endif
+
 -- | @config/settings.yml@, parsed to a @Value@.
 configSettingsYmlValue :: Value
-configSettingsYmlValue = either throw id $ decodeEither' configSettingsYmlBS
+configSettingsYmlValue = either throw id $ decodeEither'
+    (configSettingsYmlBS <> configSettingsYmlDBBS)
 
 -- | A version of @AppSettings@ parsed at compile time from @config/settings.yml@.
 compileTimeAppSettings :: AppSettings
