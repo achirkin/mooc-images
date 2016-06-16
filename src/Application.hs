@@ -62,7 +62,7 @@ makeFoundation appSettings = do
     appStatic <-
         (if appMutableStatic appSettings then staticDevel else static)
         (appStaticDir appSettings)
-    appWSChan <- newTChanIO
+--    appWSChan <- newTChanIO
 
     -- We need a log function to create a connection pool. We need a connection
     -- pool to create our foundation. And we need our foundation to get a
@@ -81,6 +81,9 @@ makeFoundation appSettings = do
 
     -- Perform database migration using our application's logging settings.
     runLoggingT (runSqlPool (runMigration migrateAll) pool) logFunc
+
+    _ <- flip runSqlPool pool $ upsert (User "achirkin" True) [UserIsAdmin =. True]
+
 
     -- Return the foundation
     return $ mkFoundation pool

@@ -1,18 +1,22 @@
 module Handler.Home where
 
 
+import qualified Data.Text as Text
 import qualified Data.Text.Read as Text
 import Import
 
 
 getHomeR :: Handler Html
 getHomeR = do
+    mmsg <- getMessage
+    muser <- fmap entityVal <$> maybeAuth
+
     l <- maybeLimit <$> lookupGetParam "l"
     o' <- maybeOffset <$> lookupGetParam "o"
     totalNumber <- runDB $ count ([] :: [Filter Story])
-    let p = o' `div` l
-        o = p * l
-        pages = zip ([0..]:: [Int]) [0,l..totalNumber]
+    let p = (o' `div` l) + 1
+        o = (p - 1) * l
+        pages = zip ([1..]:: [Int]) [0,l..totalNumber]
         proute = HomeR
     storedFiles <- runDB $ getStories o l >>= mapM viewStory
 
@@ -30,20 +34,21 @@ getOldStories offset limit = selectList [] [Desc OldStoryCreationTime, OffsetBy 
 
 getOldHomeR :: Handler Html
 getOldHomeR = do
+    mmsg <- getMessage
+    muser <- fmap entityVal <$> maybeAuth
+
     l <- maybeLimit <$> lookupGetParam "l"
     o' <- maybeOffset <$> lookupGetParam "o"
     totalNumber <- runDB $ count ([] :: [Filter OldStory])
-    let p = o' `div` l
-        o = p * l
-        pages = zip ([0..]:: [Int]) [0,l..totalNumber]
+    let p = (o' `div` l) + 1
+        o = (p - 1) * l
+        pages = zip ([1..]:: [Int]) [0,l..totalNumber]
         proute = OldHomeR
     storedFiles <- runDB $ getOldStories o l >>= mapM viewOldStory
 
     defaultLayout $ do
         setTitle "EdX User Stories"
         $(widgetFile "home")
-
-
 
 -- | Default number of results to return
 ndef :: Int

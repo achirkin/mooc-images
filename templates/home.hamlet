@@ -3,7 +3,100 @@
 <link href="@{StaticR css_project_min_css}" rel="stylesheet">
 
 <!-- header of the page -->
-<header class="header header-transparent header-waterfall ui-header">
+<header class="header header-transparent header-waterfall ui-header affix-top">
+  <ul class="nav nav-list pull-left">
+    <li>
+      <a data-toggle="menu" href="#ui_menu">
+        <span class="icon icon-lg">menu
+  <a class="header-logo margin-left-no" href="@{proute}">Edx user stories
+  <ul class="nav nav-list pull-right">
+    <li class="dropdown margin-right">
+      $maybe user <- muser
+        <a class="dropdown-toggle padding-left-no padding-right-no" data-toggle="dropdown">
+          <p style="margin-right: 0.5em;">#{userName user}
+          <span class="avatar avatar-sm">#{Text.toUpper $ Text.take 1 $ userName user}
+        <ul class="dropdown-menu dropdown-menu-right">
+          <li>
+            <a class="padding-right-lg waves-attach waves-effect" href="@{AuthR LogoutR}">
+              <span class="icon icon-lg margin-right">exit_to_app
+              Logout
+      $nothing
+        <a href=@{AuthR LoginR}>Login
+
+<!-- Navigation bar -->
+<nav style="display: none;" aria-hidden="true" class="menu" id="ui_menu" tabindex="-1">
+  <div class="menu-scroll">
+    <div class="menu-content">
+        <a class="menu-logo" href="@{proute}">Menu Logo
+        <ul class="nav">
+          <li>
+            <a class="collaosed waves-attach waves-effect" data-toggle="collapse" href="#ui_menu_components">Components
+            <ul class="menu-collapse collapse" id="ui_menu_components">
+              <li>
+                <a class="waves-attach waves-effect" href="ui-button.html">Buttons
+              <li>
+                <a class="waves-attach waves-effect" href="ui-button-fab.html">Buttons
+                  <small class="margin-left-xs">(Floating Action Button)
+              <li>
+                <a class="waves-attach waves-effect" href="ui-card.html">Cards
+              <li>
+                <a class="waves-attach waves-effect" href="ui-data-table.html">Data Tables
+              <li>
+                <a class="waves-attach waves-effect" href="ui-dialog.html">Dialogs
+              <li>
+                <a class="waves-attach waves-effect" href="ui-dropdown-menu.html">Menus
+              <li>
+                <a class="waves-attach waves-effect" href="ui-nav-drawer.html">Navigation Drawers
+              <li>
+                <a class="waves-attach waves-effect" href="ui-picker.html">Pickers
+              <li>
+                <a class="waves-attach waves-effect" href="ui-progress.html">Progress
+              <li>
+                <a class="waves-attach waves-effect" href="ui-selection-control.html">Selection Controls
+              <li>
+                <a class="waves-attach waves-effect" href="ui-snackbar.html">Snackbars
+              <li>
+                <a class="waves-attach waves-effect" href="ui-stepper.html">Steppers
+              <li>
+                <a class="waves-attach waves-effect" href="ui-tab.html">Tabs
+              <li>
+                <a class="waves-attach waves-effect" href="ui-text-field.html">Text Fields
+              <li>
+                <a class="waves-attach waves-effect" href="ui-toolbar.html">Toolbars
+          <li>
+            <a class="collapsed waves-attach waves-effect" data-toggle="collapse" href="#ui_menu_extras">Extras
+            <ul class="menu-collapse collapse" id="ui_menu_extras">
+              <li>
+                <a class="waves-attach waves-effect" href="ui-avatar.html">Avatars
+              <li>
+                <a class="waves-attach waves-effect" href="ui-icon.html">Icons
+              <li>
+                <a class="waves-attach waves-effect" href="ui-label.html">Labels
+              <li>
+                <a class="waves-attach waves-effect" href="ui-nav.html">Navs
+              <li>
+                <a class="waves-attach waves-effect" href="ui-tile.html">Tiles
+          <li>
+            <a class="collapsed waves-attach waves-effect" data-toggle="collapse" href="#ui_menu_javascript">Javascript
+            <ul class="menu-collapse collapse" id="ui_menu_javascript">
+              <li>
+                <a class="waves-attach waves-effect" href="ui-affix.html">Affix
+              <li>
+                <a class="waves-attach waves-effect" href="ui-collapse.html">Collapse
+              <li>
+                <a class="waves-attach waves-effect" href="ui-dropdown-menu.html">Dropdown
+              <li>
+                <a class="waves-attach waves-effect" href="ui-modal.html">Modals
+              <li>
+                <a class="waves-attach waves-effect" href="ui-tab.html">Togglable Tabs
+          <li>
+            <a class="collapsed waves-attach waves-effect" data-toggle="collapse" href="#ui_menu_samples">Sample Pages
+            <ul class="menu-collapse collapse" id="ui_menu_samples">
+              <li>
+                <a class="waves-attach waves-effect" href="page-login.html">Login Page
+              <li>
+                <a class="waves-attach waves-effect" href="page-picker.html">Picker Page
+
 
 <!-- content -->
 <main class="content">
@@ -19,6 +112,8 @@
           <div class="card margin-bottom-no">
             <div class="card-main">
               <div class="card-inner">
+                $maybe msg <- mmsg
+                  <p>#{msg}
                 $if null storedFiles
                   <p>No stories have been uploaded yet.
                 $else
@@ -30,7 +125,7 @@
           $if null storedFiles
           $else
             $forall f <- storedFiles
-              <div class="col-lg-4 col-md-6 col-sm-9 col-xs-9">
+              <div class="col-lg-4 col-md-6 col-sm-9 col-xs-9 story_cards">
                 <div class="card">
                   <aside class="card-side card-side-img pull-left card-side-moocimg">
                     <img src="@{ImgPreviewR $ svImage f}" width="200px" height="200px">
@@ -75,9 +170,11 @@
   "use strict"
   \$("a.call-modal").click(function(e){
     e.preventDefault();
+    \$(this).parent().parent().attr('id', 'active_story');
     \$("#modals-container").load($(this).attr("href"));
     \$("#modals-container").modal('show');
   });
   \$("#modals-container").on("hidden.bs.modal", function (e) {
+    \$("#active_story").attr('id', null);
     \$("#modals-container").empty();
   });

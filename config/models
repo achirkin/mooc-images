@@ -1,3 +1,10 @@
+-- | Web-app user (authorize via ETHZ LDAP)
+User
+    name Text
+    isAdmin Bool default=False
+    ETHUserName name
+    deriving Show
+
 -- | Relate students in the database to edX students.
 --   Assume edxUserId does not change in edX.
 Student
@@ -61,6 +68,7 @@ Place
     longitude      Double
     GeonameId      geonameId
 
+-- | Stories imported from previous courses
 OldStory
     resource EdxResourceId
     image ImagePreviewId

@@ -1,6 +1,6 @@
 module Foundation where
 
-import Control.Concurrent.STM.TChan
+--import Control.Concurrent.STM.TChan
 
 
 import Data.Conduit
@@ -19,6 +19,8 @@ import qualified Yesod.Core.Unsafe as Unsafe
 --import qualified Data.Text.Encoding as TE
 
 import Import.NoFoundation
+import Yesod.Auth.LdapNative
+
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -30,7 +32,7 @@ data App = App
     , appConnPool    :: ConnectionPool -- ^ Database connection pool.
     , appHttpManager :: Manager
     , appLogger      :: Logger
-    , appWSChan      :: TChan Text
+--    , appWSChan      :: TChan Text
     }
 
 -- This is where we define all of the routes in our application. For a full
@@ -76,7 +78,6 @@ instance Yesod App where
 
     defaultLayout widget = do
 --        master <- getYesod
---        mmsg <- getMessage
 
         -- We break up the default layout into two components:
         -- default-layout is the contents of the body tag, and
@@ -123,6 +124,7 @@ instance Yesod App where
             || level == LevelError
 
     makeLogger = return . appLogger
+    maximumContentLength _ (Just ImageUploadR) = Just 20000000
     maximumContentLength _ _ = Just 2000000
 
 -- How to run database actions.
@@ -134,31 +136,38 @@ instance YesodPersist App where
 instance YesodPersistRunner App where
     getDBRunner = defaultGetDBRunner appConnPool
 
---instance YesodAuth App where
---    type AuthId App = UserId
---
---    -- Where to send a user after successful login
---    loginDest _ = HomeR
---    -- Where to send a user after logout
---    logoutDest _ = HomeR
---    -- Override the above two destinations when a Referer: header is present
---    redirectToReferer _ = True
---
---    authenticate creds = runDB $ do
---        x <- getBy $ UniqueUser $ credsIdent creds
---        case x of
---            Just (Entity uid _) -> return $ Authenticated uid
---            Nothing -> Authenticated <$> insert User
---                { userIdent = credsIdent creds
---                , userPassword = Nothing
---                }
---
---    -- You can add other plugins like Google Email, email or OAuth here
---    authPlugins _ = [authOpenId Claimed []]
---
---    authHttpManager = getHttpManager
---
---instance YesodAuthPersist App
+
+ldapConf :: LdapAuthConf
+ldapConf = setHost (Insecure "auth.arch.ethz.ch") $ setPort 636
+  $ mkLdapConf Nothing "cn=users,dc=ethz,dc=ch"
+
+instance YesodAuth App where
+    type AuthId App = UserId
+
+    -- Where to send a user after successful login
+    loginDest _ = HomeR
+    -- Where to send a user after logout
+    logoutDest _ = HomeR
+    -- Override the above two destinations when a Referer: header is present
+    redirectToReferer _ = True
+
+    getAuthId creds = runDB $ do
+      x <- insertBy $ User (credsIdent creds) False
+      return $ Just $ case x of
+        Left (Entity userid _) -> userid -- newly added user
+        Right userid -> userid -- existing user
+
+    -- You can add other plugins like Google Email, email or OAuth here
+    authPlugins _ = [authLdapWithForm ldapConf $ \loginR -> $(widgetFile "login") ]
+
+    authHttpManager = appHttpManager
+
+instance YesodAuthPersist App
+
+isAdmin :: Maybe User -> Bool
+isAdmin Nothing = False
+isAdmin (Just (User _ a)) = a
+
 
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.

@@ -7,7 +7,8 @@
   <div class="modal-content">
     <div class="modal-heading">
       <p class="modal-close">
-        <a class="modal-title-icon icon" onclick="$('#delete_dialog').show().addClass('in')">&#xe872;
+        $if isAdmin muser
+          <a class="modal-title-icon icon" onclick="$('#delete_dialog').show().addClass('in')">&#xe872;
         <a class="modal-title-icon icon" target="_blank" href="https://www.google.com/searchbyimage?image_url=@{ImageR $ svImage story}" style="background-image: url(@{StaticR img_gsearch_png}); background-size: contain;">&#xe8b6;
         <a class="modal-title-icon icon" data-dismiss="modal">&#xe5cd;
       <p class="modal-title">
@@ -24,21 +25,24 @@
       <p style="white-space: pre-line">
         #{svComment story}
 
-<div style="display: none;" class="modal modal-va-middle fade" id="delete_dialog" tabindex="-1">
-  <div class="modal-dialog modal-xs">
-    <div class="modal-content">
-      <div class="modal-inner">
-        <p class="h5 margin-top-sm text-black-hint">Are you sure you want to delete the story?</p>
-      <div class="modal-footer">
-        <p class="text-right">
-          <a class="btn btn-flat btn-brand-accent waves-attach waves-effect" onclick="$('#delete_dialog').hide().removeClass('in')">Cancel
-          <a class="btn btn-flat btn-brand-accent waves-attach waves-effect" data-dismiss="modal" onclick="deleteStory()">Delete
+$if isAdmin muser
+  <div style="display: none;" class="modal modal-va-middle fade" id="delete_dialog" tabindex="-1">
+    <div class="modal-dialog modal-xs">
+      <div class="modal-content">
+        <div class="modal-inner">
+          <p class="h5 margin-top-sm text-black-hint">Are you sure you want to delete the story?</p>
+        <div class="modal-footer">
+          <p class="text-right">
+            <a class="btn btn-flat btn-brand-accent waves-attach waves-effect" onclick="$('#delete_dialog').hide().removeClass('in')">Cancel
+            <a class="btn btn-flat btn-brand-accent waves-attach waves-effect" data-dismiss="modal" onclick="deleteStory()">Delete
 
-<script type="text/javascript">
-  "use strict"
-  function deleteStory()
-  \{
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", @{deleteStory}, true );
-    xmlHttp.send( null );
-  \}
+
+  <script type="text/javascript">
+    "use strict"
+    function deleteStory()
+    \{
+      \$("#active_story").remove();
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.open("GET","@{deleteStory}",true);
+      xmlHttp.send();
+    \}
