@@ -158,7 +158,7 @@ instance YesodAuth App where
         Right userid -> userid -- existing user
 
     -- You can add other plugins like Google Email, email or OAuth here
-    authPlugins _ = [authLdapWithForm ldapConf $ \loginR -> $(widgetFile "login") ]
+    authPlugins _ = [authLdapWithForm ldapConf $ \loginR -> getMessage >>= \mmsg -> $(widgetFile "login") ]
 
     authHttpManager = appHttpManager
 
@@ -208,10 +208,12 @@ data TStory = TStory
 previewSize :: Int
 previewSize = 400
 
-persistStory :: TStory -> Handler (Entity Story)
-persistStory story = runDB $ do
+persistStory :: TStory -> [(Text,Text)] -> Handler (Entity Story)
+persistStory story storesessionmap = runDB $ do
     studentId  <- saveStudent
     resourceId <- saveResource
+    forM_ storesessionmap $ \(key,val) ->
+      void (upsert (EdxResourceParam resourceId key val) [EdxResourceParamValue =. val])
     previewId  <- saveImgPreview
     let placeId = tstoryPlace story
     time <- liftIO getCurrentTime

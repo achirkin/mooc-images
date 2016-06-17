@@ -15,11 +15,12 @@
 module Handler.ImageUpload where
 
 import Data.Conduit
-import Data.Conduit.Binary
+import qualified Data.Conduit.Binary as CB
 --import Data.Maybe (isJust)
 import Data.CaseInsensitive (original)
 
 import Data.Default
+import qualified Data.Map.Lazy as Map
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Lazy as LText
@@ -48,17 +49,30 @@ getImageUploadR = postImageUploadR
 postImageUploadR :: Handler Html
 postImageUploadR = setupSession $ \isNewSession -> do
     ((res, widget), formEncType) <- runFormPost uploadForm
-    case res of
+    html <- case res of
       FormFailure msgs -> uploadFormLayout $ do
         unless isNewSession $ showFormError msgs
         showFormWidget widget formEncType
       FormMissing -> uploadFormLayout $
         showFormWidget widget formEncType
       FormSuccess story -> do
-        _ <- persistStory story
+        sessionvals <- getSession
+        _ <- persistStory story (foldr getCustomParams [] $ Map.toList sessionvals)
+        deleteSession "resource_link_id"
         uploadFormLayout $
           showFormSuccess story
+    -- setup all session params
+    when isNewSession $ (fmap fst runRequestBody) >>= mapM_ saveCustomParams
+    -- view html
+    return html
   where
+    saveCustomParams (k,v) = do
+      case Text.stripPrefix "custom_" k of
+        Nothing -> return ()
+        Just key -> setSession ("storesession_" <> key) v
+    getCustomParams (k,v) xs = case Text.stripPrefix "storesession_" k of
+        Nothing -> xs
+        Just key -> (key, Text.decodeUtf8 v):xs
     uploadFormLayout c = defaultLayout $ setTitle "Share your story" >> c
     showFormError :: [Text] -> Widget
     showFormError msgs = do
@@ -121,7 +135,6 @@ setupSession continue = do
        && (msesResLink == postRL || msesResLink == getRL)
     then continue False
     else do
-        liftIO $ putStrLn "\n\nStarting Session\n"
         deleteSession "resource_link_id"
         yreq <- getRequest
         t_lti <- appLTICredentials . appSettings <$> getYesod
@@ -214,7 +227,7 @@ uploadForm extra = do
     -- set up hidden fields for keeping image
     (imgFName, imgFType, imgBase64) <- case mimageRes of
         FormSuccess (Just fi) -> do
-            fb <- runResourceT $ fileSource fi $$ sinkLbs
+            fb <- runResourceT $ fileSource fi $$ CB.sinkLbs
             return ( Just $ fileName fi
                    , Just $ fileContentType fi
                    , Just . LText.decodeUtf8 $ Base64L.encode fb
@@ -246,7 +259,7 @@ uploadForm extra = do
             x -> x *> s
 
         storyRes' =
-          if all not -- ^ test if we illed anything
+          if all not -- ^ test if we filled anything
             [ hasValue imageRes
             , hasValue placeRes
             , hasValue countryRes
@@ -294,7 +307,7 @@ uploadForm extra = do
                  (Just idata) = Just $ FileInfo
         { fileName = iname
         , fileContentType = itype
-        , fileSourceRaw = sourceLbs . Base64L.decodeLenient
+        , fileSourceRaw = CB.sourceLbs . Base64L.decodeLenient
                                     $ LText.encodeUtf8 idata
         , fileMove = \_ -> return ()
         }

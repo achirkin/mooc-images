@@ -5,6 +5,9 @@ extra-deps:
   - authenticate-oauth-1.6
     # ltiv1p1 package is an LTI 1.1 provider partial implementation
   - ltiv1p1-1.0.0.1
+    # ETH login via LDAP
+  - yesod-auth-ldap-native-0.2.0.0
+  - ldap-client-0.1.0
 
 packages:
   - .

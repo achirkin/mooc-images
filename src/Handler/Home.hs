@@ -3,48 +3,58 @@ module Handler.Home where
 
 import qualified Data.Text as Text
 import qualified Data.Text.Read as Text
+
+import qualified Database.Esqueleto      as E
+import           Database.Esqueleto      ((^.))
+
 import Import
 
 
+
 getHomeR :: Handler Html
-getHomeR = do
-    mmsg <- getMessage
-    muser <- fmap entityVal <$> maybeAuth
-
-    l <- maybeLimit <$> lookupGetParam "l"
-    o' <- maybeOffset <$> lookupGetParam "o"
-    totalNumber <- runDB $ count ([] :: [Filter Story])
-    let p = (o' `div` l) + 1
-        o = (p - 1) * l
-        pages = zip ([1..]:: [Int]) [0,l..totalNumber]
-        proute = HomeR
-    storedFiles <- runDB $ getStories o l >>= mapM viewStory
-
-    defaultLayout $ do
-        setTitle "EdX User Stories"
-        $(widgetFile "home")
-
-
-getStories :: Int -> Int -> ReaderT SqlBackend Handler [Entity Story]
-getStories offset limit = selectList [] [Desc StoryCreationTime, OffsetBy offset, LimitTo limit]
-
-getOldStories :: Int -> Int -> ReaderT SqlBackend Handler [Entity OldStory]
-getOldStories offset limit = selectList [] [Desc OldStoryCreationTime, OffsetBy offset, LimitTo limit]
-
+getHomeR = getAllHomes False
 
 getOldHomeR :: Handler Html
-getOldHomeR = do
+getOldHomeR = getAllHomes True
+
+
+getAllHomes :: Bool -> Handler Html
+getAllHomes getOld = do
+--    getAllStories <- runDB prepareGetStories
+    getStoriesForTask <- runDB prepareGetStoriesForTask
+    getStoriesForCourse <- runDB prepareGetStoriesForCourse
+    let countStories = if getOld
+                       then count ([] :: [Filter OldStory])
+                       else count ([] :: [Filter Story])
+    countStoriesForTask <- runDB prepareCountStoriesForTask
+    countStoriesForCourse <- runDB prepareCountStoriesForCourse
     mmsg <- getMessage
     muser <- fmap entityVal <$> maybeAuth
-
+    mresId <- fmap E.toSqlKey . maybeInt <$> lookupGetParam "r" :: Handler (Maybe (Key EdxResource))
+    mcourseId <- fmap E.toSqlKey . maybeInt <$> lookupGetParam "c" :: Handler (Maybe (Key EdxCourse))
     l <- maybeLimit <$> lookupGetParam "l"
     o' <- maybeOffset <$> lookupGetParam "o"
-    totalNumber <- runDB $ count ([] :: [Filter OldStory])
+    totalNumber <- runDB $ case (mresId, mcourseId) of
+          (Just resId,_) -> countStoriesForTask resId
+          (_, Just courseId) -> countStoriesForCourse courseId
+          (Nothing,Nothing) -> countStories
     let p = (o' `div` l) + 1
         o = (p - 1) * l
         pages = zip ([1..]:: [Int]) [0,l..totalNumber]
-        proute = OldHomeR
-    storedFiles <- runDB $ getOldStories o l >>= mapM viewOldStory
+        proute = if getOld then OldHomeR else HomeR
+        pageLinkQ = case (mresId, mcourseId) of
+          (Just resId,_) -> "&r=" <> Text.pack (show $ E.fromSqlKey resId)
+          (_, Just courseId) -> "&c=" <> Text.pack (show $ E.fromSqlKey courseId)
+          (Nothing,Nothing) -> ""
+        query = case (mresId, mcourseId) of
+          (Just resId,_) -> getStoriesForTask resId o l
+          (_, Just courseId) -> getStoriesForCourse courseId o l
+          (Nothing,Nothing) -> (if getOld then getOldStories o l >>= mapM viewOldStory
+                                          else getStories o l >>= mapM viewStory)
+    (storedFiles, edxResources) <- runDB $ do
+          a <- query
+          b <- getResCourses
+          return (a,b)
 
     defaultLayout $ do
         setTitle "EdX User Stories"
@@ -69,3 +79,39 @@ maybeLimit Nothing = ndef
 maybeLimit (Just m) = case Text.decimal m of
     Left _ -> ndef
     Right (n,_) -> min nmax n
+
+maybeInt :: Maybe Text -> Maybe Int64
+maybeInt Nothing = Nothing
+maybeInt (Just m) = case Text.decimal m of
+    Left _ -> Nothing
+    Right (n,_) -> Just n
+
+
+
+
+getStories :: Int -> Int -> ReaderT SqlBackend Handler [Entity Story]
+getStories offset limit = selectList [] [Desc StoryCreationTime, OffsetBy offset, LimitTo limit]
+
+getOldStories :: Int -> Int -> ReaderT SqlBackend Handler [Entity OldStory]
+getOldStories offset limit = selectList [] [Desc OldStoryCreationTime, OffsetBy offset, LimitTo limit]
+
+
+getCourses :: ReaderT SqlBackend Handler [Entity EdxCourse]
+getCourses = selectList [] [Asc EdxCourseFriendlyName, Asc EdxCourseContextId]
+
+getResources :: Key EdxCourse -> ReaderT SqlBackend Handler [Entity EdxResource]
+getResources courseId = selectList [EdxResourceCourseId ==. courseId] [Asc EdxResourceFriendlyName, Asc EdxResourceLink]
+
+getResCourses :: ReaderT SqlBackend Handler [(Entity EdxCourse, [Entity EdxResource])]
+getResCourses = fmap groupThen . E.select $ E.from $ \(course `E.InnerJoin` resource) -> do
+    E.on $ resource ^. EdxResourceCourseId E.==. course ^. EdxCourseId
+    E.orderBy [ E.asc (course ^. EdxCourseFriendlyName), E.asc (course ^. EdxCourseContextId)
+              , E.asc (resource ^. EdxResourceFriendlyName), E.asc (resource ^. EdxResourceLink)]
+    return (course, resource)
+  where
+    groupThen [] = []
+    groupThen ((c@(Entity i _),r):xs) = let (g, rest) = takeSame i xs
+                           in (c, r:g) : groupThen rest
+    takeSame _ [] = ([],[])
+    takeSame a xss@((Entity c _,r):xs) | a /= c    = ([], xss)
+                                       | otherwise = first (r:) $ takeSame a xs

@@ -21,6 +21,14 @@ EdxResource
     EdxResLink   link
     deriving Show
 
+-- | custom parameters set for an exercise
+EdxResourceParam
+    resourceId EdxResourceId
+    key        Text
+    value      Text
+    EdxResParam resourceId key
+    deriving Show
+
 -- | An edX course
 EdxCourse
     contextId    Text
@@ -67,6 +75,8 @@ Place
     latitude       Double
     longitude      Double
     GeonameId      geonameId
+
+
 
 -- | Stories imported from previous courses
 OldStory
