@@ -24,7 +24,10 @@ import Import
 getStoryR :: Key Story -> Handler Html
 getStoryR ident = do
     muser <- fmap entityVal <$> maybeAuth
-    story <- runDB $ get404 ident >>= viewStory . Entity ident
+    (story, resId) <- runDB $ get404 ident >>= \s -> do
+       vs <- viewStory $ Entity ident s
+       return (vs, storyResource s )
+    storyLocation <- makeLocation resId
     let deleteStory = DeleteStoryR ident
     defaultLayout $ do
         setTitle $ toMarkup $ svTitle story
@@ -35,18 +38,38 @@ getStoryR ident = do
 getOldStoryR :: Key OldStory -> Handler Html
 getOldStoryR ident = do
     muser <- fmap entityVal <$> maybeAuth
-    story <- runDB $ get404 ident >>= viewOldStory . Entity ident
+    (story, resId) <- runDB $ get404 ident >>= \s -> do
+       vs <- viewOldStory $ Entity ident s
+       return (vs, oldStoryResource s )
+    storyLocation <- makeLocation resId
     let deleteStory = DeleteOldStoryR ident
     defaultLayout $ do
         setTitle $ toMarkup $ svTitle story
         $(widgetFile "story")
 
 getDeleteStoryR :: Key Story -> Handler ()
-getDeleteStoryR ident = do
-  muser <- fmap entityVal <$> maybeAuth
-  when (isAdmin muser) . runDB $ delete ident
+getDeleteStoryR ident = runDB $ delete ident
 
 getDeleteOldStoryR :: Key OldStory -> Handler ()
-getDeleteOldStoryR ident = do
-  muser <- fmap entityVal <$> maybeAuth
-  when (isAdmin muser) . runDB $ delete ident
+getDeleteOldStoryR ident = runDB $ delete ident
+
+
+makeLocation :: EdxResourceId -> Handler Text
+makeLocation resId = runDB $ do
+  mres <- get resId
+  case mres of
+    Nothing  -> return "Unknown exercise"
+    Just res -> do
+      mcourse <- get $ edxResourceCourseId res
+      return $ case (getCourseName mcourse, getResName mres) of
+        ("", "") -> "Unknown exercise"
+        ("", s)  -> s
+        (s, "")  -> s
+        (s,t)    -> s <> " - " <> t
+  where
+    getCourseName mcourse = case mcourse of
+      Nothing -> ""
+      Just course -> fromMaybe (edxCourseContextId course) (edxCourseFriendlyName course)
+    getResName mres = case mres of
+      Nothing -> ""
+      Just res -> fromMaybe (edxResourceLink res) (edxResourceFriendlyName res)

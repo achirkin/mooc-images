@@ -38,3 +38,11 @@
 
 .modal-title-icon:focus, .modal-title-icon:hover
   text-decoration: none
+
+.container-hovered-show
+  opacity: 0.01;
+  filter: alpha(opacity=1);
+
+li:hover > .container-hovered-show
+  opacity: 1.0;
+  filter: alpha(opacity=100);

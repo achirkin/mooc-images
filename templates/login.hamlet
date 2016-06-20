@@ -30,12 +30,12 @@
                     <div class="form-group form-group-label">
                       <div class="row">
                         <div class="col-md-10 col-md-push-1">
-                          <label class="floating-label" for="ui_login_username">Username
+                          <label class="floating-label" for="username">Username
                           <input class="form-control" id="username" name="username" type="text" required>
                     <div class="form-group form-group-label">
                       <div class="row">
                         <div class="col-md-10 col-md-push-1">
-                          <label class="floating-label" for="ui_login_password">Password
+                          <label class="floating-label" for="password">Password
                           <input class="form-control" id="password" name="password" type="password" required>
                     <div class="form-group">
                       <div class="row">

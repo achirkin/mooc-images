@@ -13,11 +13,15 @@
 
 /story/#StoryId              StoryR       GET
 /oldstory/#OldStoryId        OldStoryR    GET
-/story/#StoryId/delete       DeleteStoryR       GET
-/oldstory/#OldStoryId/delete DeleteOldStoryR    GET
 
 /image/#ImagePreviewId       ImageR       GET
 /thumb/#ImagePreviewId       ImgPreviewR  GET
+
+-- Administrating
+/story/#StoryId/delete          DeleteStoryR    GET
+/oldstory/#OldStoryId/delete    DeleteOldStoryR GET
+/course/#EdxCourseId/rename     RenameCourseR   GET
+/resource/#EdxResourceId/rename RenameResourceR GET
 
 
 -- JSON API

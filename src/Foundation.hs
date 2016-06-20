@@ -88,14 +88,15 @@ instance Yesod App where
         withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     -- The page to be redirected to when authentication is required.
---    authRoute _ = Just $ AuthR LoginR
+    authRoute _ = Just $ AuthR LoginR
 
     -- Routes not requiring authentication.
---    isAuthorized (AuthR _) _ = return Authorized
---    isAuthorized FaviconR _ = return Authorized
---    isAuthorized RobotsR _ = return Authorized
+    isAuthorized (RenameCourseR _) _ = testAdmin
+    isAuthorized (RenameResourceR _) _ = testAdmin
+    isAuthorized (DeleteStoryR _) _ = testAdmin
+    isAuthorized (DeleteOldStoryR _) _ = testAdmin
 --    -- Default to Authorized for now.
---    isAuthorized _ _ = return Authorized
+    isAuthorized _ _ = return Authorized
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -168,6 +169,9 @@ isAdmin :: Maybe User -> Bool
 isAdmin Nothing = False
 isAdmin (Just (User _ a)) = a
 
+testAdmin :: Handler AuthResult
+testAdmin = (\mu -> if isAdmin mu then Authorized else Unauthorized "Need admin rights to do this.")
+        . fmap entityVal <$> maybeAuth
 
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.

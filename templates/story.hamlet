@@ -13,6 +13,8 @@
         <a class="modal-title-icon icon" data-dismiss="modal">&#xe5cd;
       <p class="modal-title">
         #{svTitle story}
+      <p style="white-space: pre-line">
+        #{storyLocation}
     <div style="margin: 0 10px 0 10px; text-align: center">
       <img src="@{ImageR $ svImage story}" style="max-width: 100%; max-height: 60vh">
     <div class="modal-inner">

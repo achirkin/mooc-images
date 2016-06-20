@@ -8,7 +8,8 @@
     <li>
       <a data-toggle="menu" href="#ui_menu">
         <span class="icon icon-lg">menu
-  <a class="header-logo margin-left-no" href="@{proute}">Edx user stories
+  <a class="header-logo margin-left-no margin-right-no" href="@{proute}">Edx user stories
+  <p class="header-logo margin-left-no">#{currentFolder}
   <ul class="nav nav-list pull-right">
     <li class="dropdown margin-right">
       $maybe user <- muser
@@ -30,7 +31,9 @@
       <a class="menu-logo" href="@{proute}">Browse exercises
       <ul class="nav">
         $forall (Entity courseId course, resources) <- edxResources
-          <li>
+          <li style="#{adminMarginLeft 1}">
+            $if hasAdminRights
+              <a.icon.container-hovered-show" onclick="$('#rename_item_form').attr('action', '@{RenameCourseR courseId}');$('#rename_item_heading').html('#{courseRenHeading course}');" data-backdrop="static" data-toggle="modal" href="#rename_item_dialog" style="position: absolute; left: -1.2em; z-index: 5;">&#xe3c9;
             <a class="collaosed waves-attach waves-effect" data-toggle="collapse" href="#navcourse-#{E.fromSqlKey courseId}">
               $maybe cname <- edxCourseFriendlyName course
                 #{cname}
@@ -39,6 +42,8 @@
             <ul class="menu-collapse collapse" id="navcourse-#{E.fromSqlKey courseId}">
               $forall (Entity resId resource) <- resources
                 <li>
+                  $if hasAdminRights
+                    <a.icon.container-hovered-show onclick="$('#rename_item_form').attr('action', '@{RenameResourceR resId}');$('#rename_item_heading').html('#{resRenHeading resource}');" data-backdrop="static" data-toggle="modal" href="#rename_item_dialog" style="position: absolute; left: -1.1em; z-index: 5;">&#xe3c9;
                   <a class="waves-attach waves-effect" href="@{proute}?r=#{E.fromSqlKey resId}">
                     $maybe rname <- edxResourceFriendlyName resource
                       #{rname}
@@ -62,12 +67,13 @@
               <div class="card-inner">
                 $maybe msg <- mmsg
                   <p>#{msg}
-                $if null storedFiles
-                  <p>No stories have been uploaded yet.
-                $else
-                  <p>On this page you will find a list of stories uploaded by edX students.
+                $nothing
+                  $if null storedFiles
+                    <p>No stories have been uploaded yet.
+                  $else
+                    <p>On this page you will find a list of stories uploaded by edX students.
 
-      <!-- content -->
+      <!-- all story cards -->
       <div class="ui-card-wrap">
         <div class="row">
           $if null storedFiles
@@ -108,7 +114,34 @@
                   <a style="margin:2px;padding:0;display:inline" href="@{proute}?o=#{start}&l=#{l}#{pageLinkQ}">#{i}
 
 
+<!-- Story details -->
 <div aria-hidden="true" class="modal fade" tabindex="-1" role="dialog" id="modals-container">
+
+<!-- rename course or exercise modal -->
+$if hasAdminRights
+  <div style="display: none;" class="modal modal-va-middle fade" id="rename_item_dialog" tabindex="-1">
+    <div class="modal-dialog modal-xs">
+      <div class="modal-content">
+        <div class="modal-inner">
+          <p class="text-center">
+            <form class="form" id="rename_item_form" method="GET">
+              <div class="form-group">
+                <div class="row">
+                  <div class="col-md-10 col-md-push-1">
+                    <p.h5.margin-top-sm.text-black-hint #rename_item_heading>Rename
+              <div class="form-group form-group-label">
+                <div class="row">
+                  <div class="col-md-10 col-md-push-1">
+                    <label class="floating-label" for="newname">new name
+                    <input class="form-control" id="newname" name="newname" type="text" required>
+              <div class="form-group">
+                <div class="row">
+                  <div class="col-md-5 col-md-push-1">
+                    <button class="btn btn-block btn-brand waves-attach waves-light waves-effect" type="cancel" data-dismiss="modal">Cancel
+                  <div class="col-md-5 col-md-push-1">
+                    <button class="btn btn-block btn-brand waves-attach waves-light waves-effect" type="submit">Rename
+
+
 
 <!-- js -->
 <script type="text/javascript" src="@{StaticR js_jquery_2_2_3_min_js}">
@@ -126,3 +159,12 @@
     \$("#active_story").attr('id', null);
     \$("#modals-container").empty();
   });
+  \$('#rename_item_dialog').keypress(function (e) {
+    if (e.which == 13) {
+      \$("#rename_item_form").submit();
+      return false;
+    }
+  });
+
+
+

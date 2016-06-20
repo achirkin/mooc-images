@@ -6,6 +6,7 @@ import qualified Data.Text.Read as Text
 
 import qualified Database.Esqueleto      as E
 import           Database.Esqueleto      ((^.))
+import qualified Database.Persist.Sql    as PSQL
 
 import Import
 
@@ -20,6 +21,7 @@ getOldHomeR = getAllHomes True
 
 getAllHomes :: Bool -> Handler Html
 getAllHomes getOld = do
+    setUltDestCurrent
 --    getAllStories <- runDB prepareGetStories
     getStoriesForTask <- runDB prepareGetStoriesForTask
     getStoriesForCourse <- runDB prepareGetStoriesForCourse
@@ -38,7 +40,28 @@ getAllHomes getOld = do
           (Just resId,_) -> countStoriesForTask resId
           (_, Just courseId) -> countStoriesForCourse courseId
           (Nothing,Nothing) -> countStories
-    let p = (o' `div` l) + 1
+    currentFolder <- case mresId of
+           Nothing -> runDB $ getCById mcourseId
+           Just resId -> runDB $ do
+                mres <- get resId
+                case mres of
+                  Nothing -> getCById mcourseId
+                  Just res -> do
+                    mcourse <- get $ edxResourceCourseId res
+                    return $ case (getCourseName mcourse, getResName mres) of
+                      ("", "") -> ""
+                      ("", s)  -> ": " <> s
+                      (s, "")  -> ": " <> s
+                      (s,t)    -> ": " <> s <> " - " <> t
+    let hasAdminRights = isAdmin muser
+        adminMarginLeft x = if hasAdminRights then "margin-left:" ++ show (x :: Double) ++ "em;" else ""
+        courseRenHeading course = "Rename a course"
+                               <> fromMaybe "" ((" " <>) <$> edxCourseFriendlyName course)
+                               <> "<br/>(" <> edxCourseContextId course  <> ")"
+        resRenHeading res = "Rename an exercise"
+                               <> fromMaybe "" ((" " <>) <$> edxResourceFriendlyName res)
+                               <> "<br/>(" <> edxResourceLink res  <> ")"
+        p = (o' `div` l) + 1
         o = (p - 1) * l
         pages = zip ([1..]:: [Int]) [0,l..totalNumber]
         proute = if getOld then OldHomeR else HomeR
@@ -59,6 +82,17 @@ getAllHomes getOld = do
     defaultLayout $ do
         setTitle "EdX User Stories"
         $(widgetFile "home")
+  where
+    getCById (Just courseId) = getCourseName <$> get courseId
+    getCById Nothing = return ""
+    getCourseName mcourse = case mcourse of
+      Nothing -> ""
+      Just course -> fromMaybe (edxCourseContextId course) (edxCourseFriendlyName course)
+    getResName mres = case mres of
+      Nothing -> ""
+      Just res -> fromMaybe (edxResourceLink res) (edxResourceFriendlyName res)
+
+
 
 -- | Default number of results to return
 ndef :: Int
@@ -102,16 +136,40 @@ getCourses = selectList [] [Asc EdxCourseFriendlyName, Asc EdxCourseContextId]
 getResources :: Key EdxCourse -> ReaderT SqlBackend Handler [Entity EdxResource]
 getResources courseId = selectList [EdxResourceCourseId ==. courseId] [Asc EdxResourceFriendlyName, Asc EdxResourceLink]
 
+
 getResCourses :: ReaderT SqlBackend Handler [(Entity EdxCourse, [Entity EdxResource])]
-getResCourses = fmap groupThen . E.select $ E.from $ \(course `E.InnerJoin` resource) -> do
-    E.on $ resource ^. EdxResourceCourseId E.==. course ^. EdxCourseId
-    E.orderBy [ E.asc (course ^. EdxCourseFriendlyName), E.asc (course ^. EdxCourseContextId)
-              , E.asc (resource ^. EdxResourceFriendlyName), E.asc (resource ^. EdxResourceLink)]
-    return (course, resource)
+getResCourses = fmap groupThen $ PSQL.rawSql query []
   where
+    query = Text.unlines
+          ["SELECT ??, ??"
+          ,"FROM  edx_course, edx_resource"
+          ,"WHERE edx_course.id = edx_resource.course_id"
+          ,"  AND 0 < (SELECT count(t.x) FROM"
+          ,"            (SELECT story.resource as x FROM story"
+          ,"             WHERE edx_resource.id = story.resource"
+          ,"             UNION ALL"
+          ,"             SELECT old_story.resource FROM old_story"
+          ,"             WHERE edx_resource.id = old_story.resource"
+          ,"             ) t);"]
     groupThen [] = []
     groupThen ((c@(Entity i _),r):xs) = let (g, rest) = takeSame i xs
                            in (c, r:g) : groupThen rest
     takeSame _ [] = ([],[])
     takeSame a xss@((Entity c _,r):xs) | a /= c    = ([], xss)
                                        | otherwise = first (r:) $ takeSame a xs
+
+--getResCourses :: ReaderT SqlBackend Handler [(Entity EdxCourse, [Entity EdxResource])]
+--getResCourses = fmap groupThen . E.select $ E.from $ \(course `E.InnerJoin` resource) -> do
+--    E.on $ resource ^. EdxResourceCourseId E.==. course ^. EdxCourseId
+--    E.orderBy [ E.asc (course ^. EdxCourseFriendlyName), E.asc (course ^. EdxCourseContextId)
+--              , E.asc (resource ^. EdxResourceFriendlyName), E.asc (resource ^. EdxResourceLink)]
+--    return (course, resource)
+--  where
+--    groupThen [] = []
+--    groupThen ((c@(Entity i _),r):xs) = let (g, rest) = takeSame i xs
+--                           in (c, r:g) : groupThen rest
+--    takeSame _ [] = ([],[])
+--    takeSame a xss@((Entity c _,r):xs) | a /= c    = ([], xss)
+--                                       | otherwise = first (r:) $ takeSame a xs
+
+

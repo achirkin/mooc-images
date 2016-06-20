@@ -38,11 +38,10 @@ flag library-only
 flag postgresql
     description:
         Use PostgreSQL database. Otherwise use sqlite.
-    default: True
 
 library
 
-    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
         cpp-options: -DPOSTGRESQL
 
     if (flag(dev) || flag(library-only))
@@ -51,7 +50,7 @@ library
     else
         ghc-options: -Wall -fwarn-tabs -O2
 
-    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
         build-depends:
             persistent-postgresql -any
     else
@@ -61,6 +60,7 @@ library
         Application
         Foundation
         Foundation.StoryView
+        Handler.EdxCourse
         Handler.Common
         Handler.ImgPreview
         Handler.Image
@@ -134,7 +134,7 @@ library
 
 executable mooc-images
 
-    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
         cpp-options: -DPOSTGRESQL
 
     if flag(library-only)
@@ -149,7 +149,7 @@ executable mooc-images
 
 executable location-import
 
-    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
         cpp-options: -DPOSTGRESQL
 
     if flag(library-only)
@@ -192,13 +192,13 @@ executable location-import
 
 executable prevcourses-import
 
-    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
         cpp-options: -DPOSTGRESQL
 
     if flag(library-only)
         buildable: False
 
-    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
         build-depends:
             persistent-postgresql -any
     else
@@ -237,10 +237,10 @@ executable prevcourses-import
 
 test-suite mooc-images-test
 
-    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
         cpp-options: -DPOSTGRESQL
 
-    if (flag(postgresql) && !flag(dev) && !flag(library-only))
+    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
         build-depends:
             persistent-postgresql -any
     else
