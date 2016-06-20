@@ -5,7 +5,7 @@ import qualified Data.Text as Text
 import qualified Data.Text.Read as Text
 
 import qualified Database.Esqueleto      as E
-import           Database.Esqueleto      ((^.))
+--import           Database.Esqueleto      ((^.))
 import qualified Database.Persist.Sql    as PSQL
 
 import Import
@@ -41,18 +41,21 @@ getAllHomes getOld = do
           (_, Just courseId) -> countStoriesForCourse courseId
           (Nothing,Nothing) -> countStories
     currentFolder <- case mresId of
-           Nothing -> runDB $ getCById mcourseId
+           Nothing -> runDB $ (\s -> [shamlet|<p.headingline>#{fixemptyname s}|]) <$> getCById mcourseId
            Just resId -> runDB $ do
                 mres <- get resId
                 case mres of
-                  Nothing -> getCById mcourseId
+                  Nothing -> (\s -> [shamlet|<p.headingline>#{fixemptyname s}|]) <$> getCById mcourseId
                   Just res -> do
                     mcourse <- get $ edxResourceCourseId res
                     return $ case (getCourseName mcourse, getResName mres) of
-                      ("", "") -> ""
-                      ("", s)  -> ": " <> s
-                      (s, "")  -> ": " <> s
-                      (s,t)    -> ": " <> s <> " - " <> t
+                      ("", "") -> [shamlet|<p.headingline>Edx user stories|]
+                      ("", s)  -> [shamlet|<p.headingline>#{s}|]
+                      (s, "")  -> [shamlet|<p.headingline>#{s}|]
+                      (s,t)    -> [shamlet|<p.headingline style="margin-right: 1em;">
+                                                #{s}
+                                           <p.headingline>
+                                                #{t} |]
     let hasAdminRights = isAdmin muser
         adminMarginLeft x = if hasAdminRights then "margin-left:" ++ show (x :: Double) ++ "em;" else ""
         courseRenHeading course = "Rename a course"
@@ -83,6 +86,8 @@ getAllHomes getOld = do
         setTitle "EdX User Stories"
         $(widgetFile "home")
   where
+    fixemptyname "" = "Edx user stories"
+    fixemptyname s = s
     getCById (Just courseId) = getCourseName <$> get courseId
     getCById Nothing = return ""
     getCourseName mcourse = case mcourse of

@@ -8,8 +8,8 @@
     <li>
       <a data-toggle="menu" href="#ui_menu">
         <span class="icon icon-lg">menu
-  <a class="header-logo margin-left-no margin-right-no" href="@{proute}">Edx user stories
-  <p class="header-logo margin-left-no">#{currentFolder}
+  <div.header-logo.margin-no style="word-break: break-all; word-wrap: break-word; width: 70%; display: inline-block; padding-top: 12px;">
+    #{currentFolder}
   <ul class="nav nav-list pull-right">
     <li class="dropdown margin-right">
       $maybe user <- muser
