@@ -57,7 +57,17 @@ postImageUploadR = setupSession $ \isNewSession -> do
         showFormWidget widget formEncType
       FormSuccess story -> do
         sessionvals <- getSession
-        _ <- persistStory story (foldr getCustomParams [] $ Map.toList sessionvals)
+        -- save story
+        Entity _ s <- persistStory story (foldr getCustomParams [] $ Map.toList sessionvals)
+        -- grade student
+        app <- getYesod
+        case (,) <$> storyEdxOutcomeUrl s <*> storyEdxResultId s of
+           Nothing -> return ()
+           Just (url,rId) -> do
+             gr <- replaceResultRequest (appLTICredentials $ appSettings app) (Text.unpack url) rId 1.0 Nothing
+             _ <- httpNoBody gr
+             return ()
+        -- finish
         deleteSession "resource_link_id"
         uploadFormLayout $
           showFormSuccess story
