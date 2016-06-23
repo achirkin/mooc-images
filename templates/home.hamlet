@@ -84,16 +84,16 @@
                   <aside class="card-side card-side-img pull-left card-side-moocimg">
                     <img src="@{ImgPreviewR $ svImage f}" width="200px" height="200px">
                   <div class="card-main">
-                    <div class="card-inner">
-                      <p class="card-heading">
+                    <div class="card-inner" style="margin: 10px 12px;">
+                      <p class="card-heading" style="margin: 6px 0px;">
                         <span style="display: inline-block">#{svTitle f}
-                      <p>
+                      <p style="margin: 6px 0px;">
                         $case svAuthor f
                           $of Nothing
                           $of Just sname
                             #{sname}<br>
                         #{svTime f}
-                      <p class="comment-preview">
+                      <p class="comment-preview" style="margin: 6px 0px;">
                         #{shortComment f}
                 <div class="hoverbutton">
                   <a class="btn btn-flat waves-attach call-modal" href="@{svRoute f}">

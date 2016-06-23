@@ -86,6 +86,8 @@ shortComment sv = dropInitSpace . remNewLines $
         remNewLines = Text.dropWhileEnd (\c -> c == ' ' || c == '\n' || c == '\r' || c == '\t')
                     . Text.unlines
                     . take maxLines
+                    . filter (not . Text.null)
+                    . map (Text.dropWhile (\c -> c == ' ' || c == '\r' || c == '\t'))
                     . Text.lines
         dropInitSpace = Text.dropWhile (\c -> c == ' ' || c == '\n' || c == '\r' || c == '\t')
 
