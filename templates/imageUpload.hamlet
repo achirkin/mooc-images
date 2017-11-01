@@ -38,6 +38,7 @@
 <div ##{bottomDiv}>
   Share your thoughts<br>
   ^{fvInput commentView}
+  <div #remainingWords>
   <input type=submit value="Submit the story">
 
 

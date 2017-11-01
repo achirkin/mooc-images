@@ -14,10 +14,10 @@ module Foundation.StoryView
     ( StoryView (..)
     , viewStory, viewOldStory, shortComment
     , prepareGetStories
-    , prepareGetStoriesForTask
+    , prepareGetStoriesForTasks
     , prepareGetStoriesForCourse
     , prepareCountStories
-    , prepareCountStoriesForTask
+    , prepareCountStoriesForTasks
     , prepareCountStoriesForCourse
     ) where
 
@@ -153,8 +153,8 @@ prepareGetStories = do
           ]
   return $ \o l -> fmap mkStoryView <$> rawSql query [toPersistValue l, toPersistValue o]
 
-prepareGetStoriesForTask :: ReaderT SqlBackend Handler (EdxResourceId -> Int -> Int -> ReaderT SqlBackend Handler [StoryView])
-prepareGetStoriesForTask = do
+prepareGetStoriesForTasks :: ReaderT SqlBackend Handler ([EdxResourceId] -> Int -> Int -> ReaderT SqlBackend Handler [StoryView])
+prepareGetStoriesForTasks = do
   countryId   <- getFieldName CountryId
   countryName <- getFieldName CountryName
 
@@ -182,7 +182,7 @@ prepareGetStoriesForTask = do
   oldStoryAuthor       <- getFieldName OldStoryAuthor
   oldStoryCreationTime <- getFieldName OldStoryCreationTime
 
-  let query = Text.unlines
+  let query rs = Text.unlines
           ["SELECT t.stype, t.sid, t.author_name, t.place, t.country, t.title, t.stime, t.simage, t.scomment"
           ,"FROM"
           ,"(SELECT 1 as stype,"
@@ -214,11 +214,11 @@ prepareGetStoriesForTask = do
           ,"       old_story."<>oldStoryImage<>","
           ,"       old_story."<>oldStoryComment<>""
           ,"  FROM old_story) t"
-          ,"WHERE t.sres = ?"
-          ,"order by t.stime desc"
+          ,"WHERE t.sres IN (" <> Text.intercalate ", " (Text.pack . show . fromSqlKey <$> rs) <> ")"
+          ,"ORDER BY t.stime desc"
           ,"LIMIT ? OFFSET ?"
           ]
-  return $ \rId o l -> fmap mkStoryView <$> rawSql query [toPersistValue rId, toPersistValue l, toPersistValue o]
+  return $ \rIds o l -> fmap mkStoryView <$> rawSql (query rIds) [toPersistValue l, toPersistValue o]
 
 prepareGetStoriesForCourse :: ReaderT SqlBackend Handler (EdxCourseId -> Int -> Int -> ReaderT SqlBackend Handler [StoryView])
 prepareGetStoriesForCourse = do
@@ -287,7 +287,7 @@ prepareGetStoriesForCourse = do
           ,"INNER JOIN edx_resource"
           ,"        ON edx_resource."<>edxResourceId<>" = t.sres"
           ,"WHERE edx_resource."<>edxResourceCourseId<>" = ?"
-          ,"order by t.stime desc"
+          ,"ORDER BY t.stime desc"
           ,"LIMIT ? OFFSET ?"
           ]
   return $ \rId o l -> fmap mkStoryView <$> rawSql query [toPersistValue rId, toPersistValue l, toPersistValue o]
@@ -313,20 +313,20 @@ prepareCountStoriesForCourse = do
   return $ \rId -> mkCount <$> rawSql query [toPersistValue rId]
 
 
-prepareCountStoriesForTask :: ReaderT SqlBackend Handler (EdxResourceId -> ReaderT SqlBackend Handler Int)
-prepareCountStoriesForTask = do
+prepareCountStoriesForTasks :: ReaderT SqlBackend Handler ([EdxResourceId] -> ReaderT SqlBackend Handler Int)
+prepareCountStoriesForTasks = do
   storyResource     <- getFieldName StoryResource
   oldStoryResource     <- getFieldName OldStoryResource
 
-  let query = Text.unlines
+  let query rs = Text.unlines
           ["SELECT count(t.x)"
           ,"FROM"
           ,"(SELECT story."<>storyResource<>" as x FROM story"
           ,"UNION ALL"
           ,"SELECT old_story."<>oldStoryResource<>" FROM old_story) t"
-          ,"WHERE t.x = ?"
+          ,"WHERE t.x IN (" <> Text.intercalate ", " (Text.pack . show . fromSqlKey <$> rs) <> ")"
           ]
-  return $ \rId -> mkCount <$> rawSql query [toPersistValue rId]
+  return $ \rIds -> mkCount <$> rawSql (query rIds) []
 
 
 prepareCountStories :: ReaderT SqlBackend Handler (ReaderT SqlBackend Handler Int)
@@ -377,4 +377,3 @@ mkStoryView (Single False, Single sId, Single mauthor, (Single mplace, Single mc
     , svPlace    = mplace
     , svTitle    = mkTitle mtitle mcountry mplace
     }
-

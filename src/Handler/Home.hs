@@ -10,39 +10,44 @@ import qualified Database.Persist.Sql    as PSQL
 
 import Import
 
-
-
 getHomeR :: Handler Html
-getHomeR = getAllHomes False
+getHomeR = lookupGetParam "r" >>= getAllHomes False . maybeToList . fmap E.toSqlKey . maybeInt
 
 getOldHomeR :: Handler Html
-getOldHomeR = getAllHomes True
+getOldHomeR = lookupGetParam "r" >>= getAllHomes True . maybeToList . fmap E.toSqlKey . maybeInt
 
 
-getAllHomes :: Bool -> Handler Html
-getAllHomes getOld = do
+getExerciseR :: Text -> Handler Html
+getExerciseR name = runDB (selectList [ EdxResourceParamKey ==. "linksuffix"
+                                      , EdxResourceParamValue ==. name]
+                                      [Desc EdxResourceParamId]
+                          )
+                >>= getAllHomes False . fmap (edxResourceParamResourceId . entityVal)
+
+
+getAllHomes :: Bool -> [EdxResourceId] -> Handler Html
+getAllHomes getOld resIds = do
     setUltDestCurrent
 --    getAllStories <- runDB prepareGetStories
-    getStoriesForTask <- runDB prepareGetStoriesForTask
+    getStoriesForTasks <- runDB prepareGetStoriesForTasks
     getStoriesForCourse <- runDB prepareGetStoriesForCourse
     let countStories = if getOld
                        then count ([] :: [Filter OldStory])
                        else count ([] :: [Filter Story])
-    countStoriesForTask <- runDB prepareCountStoriesForTask
+    countStoriesForTasks <- runDB prepareCountStoriesForTasks
     countStoriesForCourse <- runDB prepareCountStoriesForCourse
     mmsg <- getMessage
     muser <- fmap entityVal <$> maybeAuth
-    mresId <- fmap E.toSqlKey . maybeInt <$> lookupGetParam "r" :: Handler (Maybe (Key EdxResource))
     mcourseId <- fmap E.toSqlKey . maybeInt <$> lookupGetParam "c" :: Handler (Maybe (Key EdxCourse))
     l <- maybeLimit <$> lookupGetParam "l"
     o' <- maybeOffset <$> lookupGetParam "o"
-    totalNumber <- runDB $ case (mresId, mcourseId) of
-          (Just resId,_) -> countStoriesForTask resId
-          (_, Just courseId) -> countStoriesForCourse courseId
-          (Nothing,Nothing) -> countStories
-    currentFolder <- case mresId of
-           Nothing -> runDB $ (\s -> [shamlet|<p.headingline>#{fixemptyname s}|]) <$> getCById mcourseId
-           Just resId -> runDB $ do
+    totalNumber <- runDB $ case (resIds, mcourseId) of
+          ([], Just courseId) -> countStoriesForCourse courseId
+          ([], Nothing) -> countStories
+          (xs,_) -> countStoriesForTasks xs
+    currentFolder <- case resIds of
+           [] -> runDB $ (\s -> [shamlet|<p.headingline>#{fixemptyname s}|]) <$> getCById mcourseId
+           (resId:_) -> runDB $ do
                 mres <- get resId
                 case mres of
                   Nothing -> (\s -> [shamlet|<p.headingline>#{fixemptyname s}|]) <$> getCById mcourseId
@@ -68,15 +73,15 @@ getAllHomes getOld = do
         o = (p - 1) * l
         pages = zip ([1..]:: [Int]) [0,l..totalNumber]
         proute = if getOld then OldHomeR else HomeR
-        pageLinkQ = case (mresId, mcourseId) of
-          (Just resId,_) -> "&r=" <> Text.pack (show $ E.fromSqlKey resId)
+        pageLinkQ = case (resIds, mcourseId) of
+          ([],Nothing) -> ""
           (_, Just courseId) -> "&c=" <> Text.pack (show $ E.fromSqlKey courseId)
-          (Nothing,Nothing) -> ""
-        query = case (mresId, mcourseId) of
-          (Just resId,_) -> getStoriesForTask resId o l
-          (_, Just courseId) -> getStoriesForCourse courseId o l
-          (Nothing,Nothing) -> (if getOld then getOldStories o l >>= mapM viewOldStory
-                                          else getStories o l >>= mapM viewStory)
+          (resId:_,_) -> "&r=" <> Text.pack (show $ E.fromSqlKey resId)
+        query = case (resIds, mcourseId) of
+          ([],Nothing) -> (if getOld then getOldStories o l >>= mapM viewOldStory
+                                        else getStories o l >>= mapM viewStory)
+          ([],Just courseId) -> getStoriesForCourse courseId o l
+          (xs,_) -> getStoriesForTasks xs o l
     (storedFiles, edxResources) <- runDB $ do
           a <- query
           b <- getResCourses
@@ -124,8 +129,6 @@ maybeInt Nothing = Nothing
 maybeInt (Just m) = case Text.decimal m of
     Left _ -> Nothing
     Right (n,_) -> Just n
-
-
 
 
 getStories :: Int -> Int -> ReaderT SqlBackend Handler [Entity Story]
@@ -176,5 +179,3 @@ getResCourses = fmap groupThen $ PSQL.rawSql query []
 --    takeSame _ [] = ([],[])
 --    takeSame a xss@((Entity c _,r):xs) | a /= c    = ([], xss)
 --                                       | otherwise = first (r:) $ takeSame a xs
-
-

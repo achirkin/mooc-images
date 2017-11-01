@@ -45,7 +45,7 @@ var setAutocomplete = function(autoField,autoHidden,autoUrl
   autoParams.forEach(function(e){
     autoField.autocomplete().options.params[e[0]] = e[1];
   });
-}
+};
 
 var modPlace = function(c, placeName, placeView){
   if (c <= 0) {
@@ -59,20 +59,45 @@ var modPlace = function(c, placeName, placeView){
     $(placeName).autocomplete().options.params['c'] = c;
     $(placeView).focus();
   }
-}
+};
 
 var autoCountry = function(autoField,autoHidden,autoUrl,placeName,placeView){
     setAutocomplete(autoField, autoHidden, autoUrl
       , [["n",10]]
       , function(c){return modPlace(c,placeName,placeView);}
       , function(x) {return { value: x[2], data: x[0] };});
-}
+};
 
 var autoPlace = function(autoField,autoHidden,autoUrl){
     setAutocomplete(autoField, autoHidden, autoUrl
       , [["n",10]]
       , function(c){return;}
       , function(x) {return { value: x[1], data: x[0] };});
-}
+};
 
+var checkLength = function(){
 
+    var content = $("#storyComment").val(); //content is now the value of the text box
+    var words = content.split(/\s+/); // words is an array of words, split by space
+    var num_words = words.length;     // num_words is the number of words in the array
+    var max_limit=200;
+    if(num_words>max_limit){
+      var lastIndex = content.lastIndexOf(" ");
+      $("#storyComment").val(content.substring(0, lastIndex));
+      if (num_words > max_limit + 1) {
+        return checkLength();
+      } else {
+        $('#remainingWords').css('color', '#FF0000');
+        $('#remainingWords').text('You have reached the word count limit of ' + max_limit + ' words.');
+        return false;
+      }
+    } else {
+      if (num_words===max_limit) {
+        return false;
+      } else {
+        $('#remainingWords').css('color', '#777777');
+        $('#remainingWords').text('Maximum ' + (max_limit - num_words) + " word(s) remaining.");
+        return true;
+      }
+    }
+};

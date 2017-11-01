@@ -26,31 +26,32 @@ source-repository head
     location: https://github.com/achirkin/mooc-images.git
 
 flag dev
+    default: False
     description:
         Turn on development settings, like auto-reload templates.
-    default: False
 
 flag library-only
+    default: False
     description:
         Build for use with "yesod devel"
-    default: False
 
 flag postgresql
+    default: True
     description:
         Use PostgreSQL database. Otherwise use sqlite.
 
 library
 
-    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
+    if flag(postgresql)
         cpp-options: -DPOSTGRESQL
 
-    if (flag(dev) || flag(library-only))
+    if flag(dev)
         cpp-options: -DDEVELOPMENT
         ghc-options: -Wall -fwarn-tabs -O0
     else
         ghc-options: -Wall -fwarn-tabs -O2
 
-    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
+    if flag(postgresql)
         build-depends:
             persistent-postgresql -any
     else
@@ -76,35 +77,35 @@ library
         Settings.StaticFiles
     build-depends:
         base >=4 && <5,
-        yesod >=1.4.3 && <1.5,
-        yesod-core >=1.4.17 && <1.5,
-        yesod-auth >=1.4.0 && <1.5,
-        yesod-static >=1.4.0.3 && <1.6,
-        yesod-form >=1.4.0 && <1.5,
+        yesod >=1.4.3,
+        yesod-core >=1.4.17,
+        yesod-auth >=1.4.0,
+        yesod-static >=1.4.0.3,
+        yesod-form >=1.4.0,
         yesod-websockets -any,
         classy-prelude >=0.10.2,
         classy-prelude-conduit >=0.10.2,
         classy-prelude-yesod >=0.10.2,
-        bytestring >=0.9 && <0.11,
-        text >=0.11 && <2.0,
-        persistent >=2.0 && <2.6,
-        persistent-template >=2.0 && <2.6,
+        bytestring >=0.9,
+        text >=0.11,
+        persistent >=2.0,
+        persistent-template >=2.0,
         template-haskell -any,
-        shakespeare >=2.0 && <2.1,
-        hjsmin >=0.1 && <0.3,
-        monad-control >=0.3 && <1.1,
-        wai-extra >=3.0 && <3.1,
-        yaml >=0.8 && <0.9,
-        http-conduit >=2.1 && <2.2,
-        directory >=1.1 && <1.3,
-        warp >=3.0 && <3.3,
+        shakespeare >=2.0,
+        hjsmin >=0.1,
+        monad-control >=0.3,
+        wai-extra >=3.0,
+        yaml >=0.8,
+        http-conduit >=2.1,
+        directory >=1.1,
+        warp >=3.0,
         data-default -any,
-        aeson >=0.6 && <0.12,
-        conduit >=1.0 && <2.0,
-        conduit-extra >=1.0 && <2.0,
-        monad-logger >=0.3 && <0.4,
-        fast-logger >=2.2 && <2.5,
-        wai-logger >=2.2 && <2.3,
+        aeson >=0.6,
+        conduit >=1.0,
+        conduit-extra >=1.0,
+        monad-logger >=0.3,
+        fast-logger >=2.2,
+        wai-logger >=2.2,
         file-embed -any,
         safe -any,
         unordered-containers -any,
@@ -134,7 +135,7 @@ library
 
 executable mooc-images
 
-    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
+    if flag(postgresql)
         cpp-options: -DPOSTGRESQL
 
     if flag(library-only)
@@ -149,13 +150,13 @@ executable mooc-images
 
 executable location-import
 
-    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
+    if flag(postgresql)
         cpp-options: -DPOSTGRESQL
 
     if flag(library-only)
         buildable: False
 
-    if (flag(postgresql) && !flag(dev))
+    if flag(postgresql)
         build-depends:
             persistent-postgresql -any
     else
@@ -188,17 +189,18 @@ executable location-import
         InsertCountries
         InsertPlaces
         Model
+        Settings
     ghc-options: -Wall -ferror-spans
 
 executable prevcourses-import
 
-    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
+    if flag(postgresql)
         cpp-options: -DPOSTGRESQL
 
     if flag(library-only)
         buildable: False
 
-    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
+    if flag(postgresql)
         build-depends:
             persistent-postgresql -any
     else
@@ -233,14 +235,18 @@ executable prevcourses-import
     hs-source-dirs: prevcourses src
     other-modules:
         Model
+        Settings
     ghc-options: -Wall -ferror-spans
 
 test-suite mooc-images-test
 
-    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
+    if flag(library-only)
+        buildable: False
+
+    if flag(postgresql)
         cpp-options: -DPOSTGRESQL
 
-    if ((flag(postgresql) && !flag(dev)) && !flag(library-only))
+    if flag(postgresql)
         build-depends:
             persistent-postgresql -any
     else
@@ -251,7 +257,7 @@ test-suite mooc-images-test
     build-depends:
         base -any,
         mooc-images -any,
-        yesod-test >=1.5.0.1 && <1.6,
+        yesod-test >=1.5.0.1,
         yesod-core -any,
         yesod -any,
         persistent -any,

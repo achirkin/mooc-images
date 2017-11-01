@@ -20,7 +20,7 @@ import qualified Data.Conduit.List as CL
 import qualified Data.Text as Text
 import qualified Data.Text.Read as Text
 import qualified Blaze.ByteString.Builder as BL (Builder)
-import Data.Aeson.Encode as Aeson
+import Data.Aeson.Text as Aeson
 
 import Import
 
@@ -44,7 +44,7 @@ getFindPlaceR = do
       Nothing                   -> return $ TypedContent typeJson "[]"
       Just (cid, (query, qlen)) -> respondSourceDB typeJson $ do
         placeQuery cid n query qlen
-                   $= CL.map (toFlushBuilder . Aeson.encodeToBuilder . toJSON . parseDBPlace)
+                   $= CL.map (toFlushBuilder . Aeson.encodeToLazyText . toJSON . parseDBPlace)
                   =$= streamJSONArray
 
 

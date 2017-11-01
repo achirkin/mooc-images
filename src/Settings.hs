@@ -7,7 +7,7 @@
 module Settings where
 
 import ClassyPrelude.Yesod
-import Control.Exception           (throw)
+import Control.Exception           as E (throw)
 import Data.Aeson                  (Result (..), fromJSON, withObject, (.!=),
                                     (.:?))
 import Data.FileEmbed              (embedFile)
@@ -143,7 +143,7 @@ configSettingsYmlDBBS = $(embedFile "config/settingsSqlite.yml")
 
 -- | @config/settings.yml@, parsed to a @Value@.
 configSettingsYmlValue :: Value
-configSettingsYmlValue = either throw id $ decodeEither'
+configSettingsYmlValue = either E.throw id $ decodeEither'
     (configSettingsYmlBS <> configSettingsYmlDBBS)
 
 -- | A version of @AppSettings@ parsed at compile time from @config/settings.yml@.

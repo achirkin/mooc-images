@@ -8,7 +8,7 @@ stanzas:
 
     # Name of your executable. You are unlikely to need to change this.
     # Note that all file paths are relative to the keter.yml file.
-    exec: ../dist/build/mooc-images/mooc-images
+    exec: ../dist/bin/mooc-images
 
     # Command line options passed to your application.
     args: [/opt/keter/etc/moocimgsettings.yml]

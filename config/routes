@@ -10,6 +10,7 @@
 -- Viewing stories
 /                            HomeR        GET
 /old                         OldHomeR     GET
+/exercise/#Text              ExerciseR    GET
 
 /story/#StoryId              StoryR       GET
 /oldstory/#OldStoryId        OldStoryR    GET

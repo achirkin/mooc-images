@@ -225,7 +225,12 @@ uploadForm extra = do
     (countryRes,countryView)  <- mreq textField    reqs Nothing
     (placeRes,  placeView   ) <- mreq textField    reqs
        { fsAttrs = ("disabled","true") : fsAttrs reqs}  Nothing
-    (commentRes,commentView) <- mreq textareaField reqs Nothing
+    (commentRes,commentView) <- mreq textareaField
+        reqs{ fsAttrs =
+                ("onkeyup", "checkLength()"):("onchange", "checkLength()") : fsAttrs reqs
+            , fsId = Just "storyComment"
+            }
+        Nothing
     (agreeRes,  agreeView  ) <- mreq checkBoxField reqs Nothing
 
     (_countryIdRes, countryIdView ) <- mreq hiddenField opts

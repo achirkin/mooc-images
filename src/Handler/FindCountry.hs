@@ -20,7 +20,7 @@ import qualified Data.Conduit.List as CL
 import qualified Data.Text as Text
 import qualified Data.Text.Read as Text
 import qualified Blaze.ByteString.Builder as BL (Builder)
-import Data.Aeson.Encode as Aeson
+import Data.Aeson.Text as Aeson
 import Yesod
 
 import Import
@@ -43,7 +43,7 @@ getFindCountryR = do
       Nothing            -> return $ TypedContent typeJson "[]"
       Just (query, qlen) -> respondSourceDB typeJson $ do
         countryQuery n query qlen
-                   $= CL.map (toFlushBuilder . Aeson.encodeToBuilder . toJSON . parseDBCountry)
+                   $= CL.map (toFlushBuilder . Aeson.encodeToLazyText . toJSON . parseDBCountry)
                   =$= streamJSONArray
 
 
