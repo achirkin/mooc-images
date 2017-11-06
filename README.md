@@ -11,9 +11,9 @@ Provides two pages:
 
 ##### Native dependencies:
 
-Uses [`GD`](http://libgd.github.io/) library for making image previews,
+Uses [`GD`](http://libgd.github.io/) library for making image previews and also `libpng`,
 available on Ubuntu via
-> apt-get install libgd-dev
+> apt-get install libgd-dev libpng-dev
 
 Needs a PostgreSQL server and client libraries if one uses this database,
 available on Ubuntu via
