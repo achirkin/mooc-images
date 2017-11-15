@@ -1,9 +1,9 @@
 database:
-  user:     "_env:PGUSER:mooc-images_LOWER"
+  user:     "_env:PGUSER:mooc-images"
   password: "_env:PGPASS:mooc-images"
   host:     "_env:PGHOST:localhost"
   port:     "_env:PGPORT:5432"
   # See config/test-settings.yml for an override during tests
-  database: "_env:PGDATABASE:mooc-images_LOWER"
+  database: "_env:PGDATABASE:mooc-images"
   poolsize: "_env:PGPOOLSIZE:10"
 
