@@ -11,13 +11,15 @@ stanzas:
     exec: ../dist/bin/mooc-images
 
     # Command line options passed to your application.
-    args: [/opt/keter/etc/moocimgsettings.yml]
+    args:
+      - /opt/keter/etc/moocimgsettings.yml
 
     hosts:
       # You can specify one or more hostnames for your application to respond
       # to. The primary hostname will be used for generating your application
       # root.
       - mooc.ia.arch.ethz.ch
+      - www.mooc.ia.arch.ethz.ch
 
     # Enable to force Keter to redirect to https
     # Can be added to any stanza
@@ -47,7 +49,7 @@ stanzas:
 
 # Use the following to automatically copy your bundle upon creation via `yesod
 # keter`. Uses `scp` internally, so you can set it to a remote destination
-copy-to: mooc.ia.arch.ethz.ch:/opt/keter/incoming/
+copy-to: moocadm@mooc.ia.arch.ethz.ch:/opt/keter/incoming/
 
 # You can pass arguments to `scp` used above. This example limits bandwidth to
 # 1024 Kbit/s and uses port 2222 instead of the default 22
