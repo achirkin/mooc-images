@@ -274,7 +274,7 @@ uploadForm extra = do
             x -> x *> s
 
         storyRes' =
-          if all not -- ^ test if we filled anything
+          if all not --  test if we filled anything
             [ hasValue imageRes
             , hasValue placeRes
             , hasValue countryRes
