@@ -158,7 +158,8 @@ getResCourses = fmap groupThen $ PSQL.rawSql query []
           ,"             UNION ALL"
           ,"             SELECT old_story.resource FROM old_story"
           ,"             WHERE edx_resource.id = old_story.resource"
-          ,"             ) t);"]
+          ,"             ) t)"
+          ,"ORDER BY edx_course.friendly_name ASC, edx_resource.friendly_name ASC;"]
     groupThen [] = []
     groupThen ((c@(Entity i _),r):xs) = let (g, rest) = takeSame i xs
                            in (c, r:g) : groupThen rest
