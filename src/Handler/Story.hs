@@ -16,6 +16,7 @@ module Handler.Story
     , getOldStoryR
     , getDeleteStoryR
     , getDeleteOldStoryR
+    , makeLocation
     ) where
 
 import Text.Blaze (toMarkup)

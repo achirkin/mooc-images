@@ -5,6 +5,7 @@ module Application
     , develMain
     , makeFoundation
     , makeLogWare
+    , getAppSettings
     -- * for DevelMain
     , getApplicationRepl
     , shutdownApp

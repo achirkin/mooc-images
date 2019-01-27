@@ -281,3 +281,63 @@ test-suite mooc-images-test
         Handler.HomeSpec
         TestImport
     ghc-options: -Wall
+
+executable mooc-images-make-static
+
+    if flag(postgresql)
+        cpp-options: -DPOSTGRESQL
+
+    if flag(library-only)
+        buildable: False
+
+    main-is: main.hs
+    build-depends:
+        base -any,
+        mooc-images -any,
+        yesod -any,
+        yesod-core -any,
+        classy-prelude -any,
+        classy-prelude-conduit -any,
+        classy-prelude-yesod -any,
+        bytestring -any,
+        text -any,
+        persistent -any,
+        persistent-template -any,
+        template-haskell -any,
+        shakespeare -any,
+        monad-control -any,
+        wai-extra -any,
+        yaml -any,
+        http-conduit -any,
+        directory -any,
+        warp -any,
+        data-default -any,
+        aeson -any,
+        conduit -any,
+        conduit-extra -any,
+        monad-logger -any,
+        fast-logger -any,
+        wai-logger -any,
+        file-embed -any,
+        safe -any,
+        unordered-containers -any,
+        containers -any,
+        vector -any,
+        time -any,
+        case-insensitive -any,
+        wai -any,
+        stm -any,
+        time -any,
+        ltiv1p1 -any,
+        gd -any,
+        resourcet -any,
+        blaze-markup -any,
+        blaze-builder -any,
+        transformers -any,
+        base64-bytestring -any,
+        esqueleto -any,
+        filepath -any,
+        binary -any
+    default-language: Haskell2010
+    hs-source-dirs: to-static
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
