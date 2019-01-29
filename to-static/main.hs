@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Main where
 
 import           Application
@@ -10,6 +11,7 @@ import qualified Data.ByteString       as BS
 import qualified Data.ByteString.Lazy  as BSL
 import qualified Data.Char             as Char
 import qualified Data.Conduit.Binary   as CB
+import           Data.FileEmbed
 import qualified Data.Text             as Text
 import           Data.Time.Calendar
 import           Data.Time.Clock
@@ -19,15 +21,25 @@ import           Import
 import           Network.Wai
 import           System.Directory
 import           System.FilePath
+import           System.IO.Unsafe
 import           System.Log.FastLogger
 
 import           Handler.Home
 import           Handler.Story
 
+dispatchStatic :: FilePath -> IO ()
+dispatchStatic rootDir = mapM_ (uncurry f) $(embedDir "static")
+  where
+    f d bs = do
+      let dir = rootDir </> "static" </> d
+      createCheckDir dir
+      BS.writeFile dir bs
+
+
 getOutDir :: IO FilePath
 getOutDir = do
   curDateStr <- showGregorian . utctDay <$> getCurrentTime
-  return $ "mooc-images-" <> curDateStr
+  makeAbsolute $ "mooc-images-" <> curDateStr
 
 
 saveHandlerContent :: ToContent a => App -> FilePath -> Handler a -> IO ()
@@ -63,10 +75,13 @@ contentToBs (ContentSource src)
 createCheckDir :: FilePath -> IO ()
 createCheckDir p = createDirectoryIfMissing True (takeDirectory p)
 
-makeApp :: IO App
-makeApp = do
+makeApp :: FilePath -> IO App
+makeApp od = do
     appSettings' <- getAppSettings
-    let appSettings = appSettings' { appRoot = Just "." }
+    let appSettings = appSettings'
+            { appRoot = Just $ Text.pack od
+            , appStaticDir = od </> appStaticDir appSettings'
+            }
     appHttpManager <- newManager
     appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
     appStatic <- static (appStaticDir appSettings)
@@ -76,8 +91,9 @@ makeApp = do
 
 main :: IO ()
 main = do
-  app <- makeApp
   od <- getOutDir
+  dispatchStatic od -- create the static folder content
+  app <- makeApp od
 
   storyFolders <- unsafeHandler app $ getStoryFolders od
   unsafeHandler app $ writeIndexHtml od storyFolders
@@ -90,12 +106,10 @@ main = do
 
 
 writeIndexHtml :: FilePath -> [StoryFolder] -> Handler ()
-writeIndexHtml od folders = do
+writeIndexHtml curRootDir folders = do
     app <- getYesod
-    let baseDir = rootDir fileLoc
-        routeUrl route = yesodRender app (Text.pack baseDir) (StaticR route) []
-        fileLoc = od </> "index.html"
-        sfIndex p = baseDir </> folderDir p </> "index.html"
+    let fileLoc = curRootDir </> "index.html"
+        sfIndex p = makeRelativeEx curRootDir (folderDir p </> "index.html")
     content <- defaultLayout $ do
       setTitle "EdX User Stories"
       toWidgetHead [hamlet|
@@ -104,8 +118,8 @@ writeIndexHtml od folders = do
       |]
       [whamlet|
         <!-- css -->
-        <link href="#{routeUrl css_base_min_css}" rel="stylesheet">
-        <link href="#{routeUrl css_project_min_css}" rel="stylesheet">
+        <link href="#{renderRel app curRootDir $ StaticR css_base_min_css}" rel="stylesheet">
+        <link href="#{renderRel app curRootDir $ StaticR css_project_min_css}" rel="stylesheet">
 
         <!-- header of the page -->
         <header class="header header-transparent header-waterfall ui-header affix-top">
@@ -142,17 +156,17 @@ writeIndexHtml od folders = do
                                 #{edxResourceLink resource}
 
 
-        <script type="text/javascript" src="#{routeUrl js_jquery_2_2_3_min_js}">
-        <script type="text/javascript" src="#{routeUrl js_base_min_js}">
-        <script type="text/javascript" src="#{routeUrl js_project_min_js}">
+        <script type="text/javascript" src="#{renderRel app curRootDir $ StaticR js_jquery_2_2_3_min_js}">
+        <script type="text/javascript" src="#{renderRel app curRootDir $ StaticR js_base_min_js}">
+        <script type="text/javascript" src="#{renderRel app curRootDir $ StaticR js_project_min_js}">
       |]
     saveContent fileLoc content
 
 getStoryFolders :: FilePath -> Handler [StoryFolder]
-getStoryFolders od = fmap (filter hasStories) . runDB $ do
+getStoryFolders curRootDir = fmap (filter hasStories) . runDB $ do
   courses <- getCourses
   fmap join $ forM courses $ \ec@(Entity coId course) -> do
-    let courseDir = od </> Text.unpack (courseNiceName course)
+    let courseDir = curRootDir </> Text.unpack (courseNiceName course)
     resources <- getResources coId
     forM resources $ \er@(Entity resId resource) -> do
       let resourceDir = courseDir </> Text.unpack (resourceNiceName resource)
@@ -205,11 +219,10 @@ saveStoryFolder maxItems sf@StoryFolder {..} = do
 writeSFHtml :: StoryFolder -> [(FilePath, StoryView)] -> Handler ()
 writeSFHtml StoryFolder {..} stories = do
     app <- getYesod
-    let baseDir = rootDir fileLoc
-        routeUrl route = yesodRender app (Text.pack baseDir) (StaticR route) []
-        fileLoc = folderDir </> "index.html"
-        svPreview p = baseDir </> p </> "preview.png"
-        svDetails p = baseDir </> p </> "story.html"
+    let curRootDir = folderDir
+        fileLoc = curRootDir </> "index.html"
+        svPreview p = makeRelativeEx curRootDir $ p </> "preview.png"
+        svDetails p = makeRelativeEx curRootDir $ p </> "story.html"
     currentFolder <- makeLocation $ entityKey folderResource
     content <- defaultLayout $ do
       setTitle $ toHtml currentFolder
@@ -219,8 +232,8 @@ writeSFHtml StoryFolder {..} stories = do
       |]
       [whamlet|
         <!-- css -->
-        <link href="#{routeUrl css_base_min_css}" rel="stylesheet">
-        <link href="#{routeUrl css_project_min_css}" rel="stylesheet">
+        <link href="#{renderRel app curRootDir $ StaticR css_base_min_css}" rel="stylesheet">
+        <link href="#{renderRel app curRootDir $ StaticR css_project_min_css}" rel="stylesheet">
 
         <!-- header of the page -->
         <header class="header header-transparent header-waterfall ui-header affix-top">
@@ -263,9 +276,9 @@ writeSFHtml StoryFolder {..} stories = do
                         <div class="hoverbutton">
                           <a class="btn btn-flat waves-attach call-modal" href="#{svDetails stPath}">
 
-        <script type="text/javascript" src="#{routeUrl js_jquery_2_2_3_min_js}">
-        <script type="text/javascript" src="#{routeUrl js_base_min_js}">
-        <script type="text/javascript" src="#{routeUrl js_project_min_js}">
+        <script type="text/javascript" src="#{renderRel app curRootDir $ StaticR js_jquery_2_2_3_min_js}">
+        <script type="text/javascript" src="#{renderRel app curRootDir $ StaticR js_base_min_js}">
+        <script type="text/javascript" src="#{renderRel app curRootDir $ StaticR js_project_min_js}">
       |]
     saveContent fileLoc content
 
@@ -290,16 +303,15 @@ saveStory dir resId  sv@StoryView {..} = do
 
 
 writeStoryHtml :: FilePath -> Key EdxResource -> StoryView -> Handler ()
-writeStoryHtml dir resId story = do
+writeStoryHtml curRootDir resId story = do
     app <- getYesod
-    let routeUrl route = yesodRender app (Text.pack $ rootDir fileLoc) (StaticR route) []
     storyLocation <- makeLocation resId
     imgname <- ("image" <.>) <$> imageExt (svImage story)
     content <- defaultLayout $ do
       setTitle $ toHtml $ svTitle story
       [whamlet|
-        <link href="#{routeUrl css_base_min_css}" rel="stylesheet">
-        <link href="#{routeUrl css_project_min_css}" rel="stylesheet">
+        <link href="#{renderRel app curRootDir $ StaticR css_base_min_css}" rel="stylesheet">
+        <link href="#{renderRel app curRootDir $ StaticR css_project_min_css}" rel="stylesheet">
 
         <div class="modal-dialog">
           <div class="modal-content">
@@ -322,14 +334,7 @@ writeStoryHtml dir resId story = do
       |]
     saveContent fileLoc content
   where
-    fileLoc = dir </> "story.html"
-
-
--- | get the path to the root dir relative to this file (not a folder!)
-rootDir :: FilePath -> FilePath
-rootDir f = join
-        $ replicate (length (splitPath f) - 1) (".." ++ [pathSeparator])
-
+    fileLoc = curRootDir </> "story.html"
 
 
 writeImgPreview :: FilePath -> Key ImagePreview -> Handler ()
@@ -420,3 +425,40 @@ encodeNice
     g ('-':'-':cs) = g ('-':cs)
     g ('-':'_':cs) = g ('-':cs)
     g (a:b:cs)     = a : g (b:cs)
+
+-- render a relative path
+renderRel :: Yesod a => a -> FilePath -> Route a -> FilePath
+renderRel app anchor route
+  = makeRelativeEx
+    anchor
+    (Text.unpack $ yesodRender app (Text.pack $ getCurAppRoot app) route [])
+
+getCurAppRoot :: Yesod a => a -> FilePath
+getCurAppRoot a = case approot of
+  ApprootStatic txt -> Text.unpack txt
+  ApprootMaster f   -> Text.unpack (f a)
+  ApprootRequest f  -> Text.unpack (f a Network.Wai.defaultRequest)
+  ApprootRelative   -> unsafePerformIO getOutDir
+
+-- Don't care about doing the same work twice, just make it robust...
+--
+-- * Windows: assume the paths refer to the same drive
+-- * Assume links do not exist
+makeRelativeEx :: FilePath -> FilePath -> FilePath
+makeRelativeEx anchor' path' = unsafePerformIO $ do
+    anchor <- makeAbsolute $ takeWhile ('?'/=) anchor'
+    path <- makeAbsolute $ takeWhile ('?'/=) path'
+    let splitA = splitDirectories anchor
+        splitP = splitDirectories path
+        splitR = commonPrefix splitA splitP
+        aN = length splitA
+        rN = length splitR
+    return . System.FilePath.joinPath
+           $ replicate (max 0 $ aN - rN) ".." <> drop rN splitP
+
+commonPrefix :: Ord a => [a] -> [a] -> [a]
+commonPrefix [] _ = []
+commonPrefix _ [] = []
+commonPrefix (a:as) (b:bs)
+  | a == b    = a : commonPrefix as bs
+  | otherwise = []
